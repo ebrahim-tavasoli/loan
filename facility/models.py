@@ -93,22 +93,9 @@ class Facility(models.Model):
     power_of_attorney_number = models.CharField("شماره وکالت نامه", max_length=255, blank=True, null=True)
     power_of_attorney_date = jmodels.jDateField("تاریخ وکالت نامه", blank=True, null=True)
     description = models.TextField("توضیحات", blank=True, null=True)
+    is_settled = models.BooleanField("تسویه شده", default=False)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
-    is_overdue = models.BooleanField("بدهی", default=False)
-
-    def save(self, *args, **kwargs):
-        if self.pk:
-            if self.end_date:
-                self.is_overdue = (
-                    self.total_debt > 0 and self.end_date < jdatetime.date.today()
-                )
-            else:
-                self.is_overdue = False
-        else:
-            self.is_overdue = False
-
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "تسهیلات"
@@ -116,6 +103,10 @@ class Facility(models.Model):
 
     def __str__(self):
         return f"{self.shareholder.name} - {self.amount}"
+
+    @property
+    def is_overdue(self):
+        return self.total_debt > 0 and self.end_date < jdatetime.date.today()
 
     @property
     def delay_repayment_penalty(self):
@@ -229,7 +220,7 @@ class Facility(models.Model):
             )
 
     @property
-    def total_deductions(self):
+    def total_deductions(self): # جمع کسورات
         if (
             self.amount_received is None
             or self.insurance_rate is None
@@ -237,10 +228,10 @@ class Facility(models.Model):
             or self.interest_rate is None
         ):
             return 0
-        return (
-            self.insurance_amount * self.amount_received
-            + self.tax_amount * self.amount_received
-            + self.interest_rate * self.amount_received
+        return int(
+            self.insurance_amount 
+            + self.tax_amount
+            + self.profit
         )
 
     @property
@@ -248,12 +239,6 @@ class Facility(models.Model):
         if self.amount_received is None or self.total_deductions is None:
             return 0
         return self.amount_received - self.total_deductions
-
-    @property
-    def remaining_balance(self):
-        if self.amount_received is None or self.total_payment is None:
-            return 0
-        return self.amount_received - self.total_payment
 
     @property
     def total_debt(self):
@@ -292,7 +277,6 @@ class Facility(models.Model):
     total_payment.fget.short_description = "مجموع پرداختی"
     definite_days.fget.short_description = "روزهای قطعی"
     transferred_days.fget.short_description = "روزهای انتقالی"
-    remaining_balance.fget.short_description = "باقی‌مانده پرداختی"
     total_debt.fget.short_description = "بدهی کل"
 
 
@@ -337,6 +321,11 @@ def fill_facility_fields(sender, instance, created, **kwargs):
         instance.tax_rate = tax_rate
         instance.save()
 
+@receiver(post_save, sender=FacilityRepayment)
+def set_facility_settled(sender, instance, created, **kwargs):
+    if not instance.facility.total_debt > 0:
+        instance.facility.is_settled = True
+        instance.facility.save()
 
 class Guarantor(models.Model):
     facility = models.ForeignKey(

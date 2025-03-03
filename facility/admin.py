@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, reverse
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from django.utils.html import format_html
 from django.http import HttpResponseRedirect
 from decouple import strtobool
@@ -8,6 +9,41 @@ import jdatetime
 
 from facility import models
 
+class OverDuePenaltyFilter(admin.SimpleListFilter):
+    title = 'جریمه دیرکرد'
+    parameter_name = 'payment_status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('true', 'دارد'),
+            ('false', 'ندارد'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'true':
+            return queryset.filter(end_date__lt=jdatetime.datetime.now(), is_settled=False)
+        elif value == 'false':
+            return queryset.filter(Q(end_date__gte=jdatetime.datetime.now()) | Q(is_settled=True))
+        return queryset
+
+class HasDebtFilter(admin.SimpleListFilter):
+    title = 'دارای بدهی'
+    parameter_name = 'has_debt'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('true', 'دارد'),
+            ('false', 'ندارد'),
+        )
+    
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'true':
+            return queryset.filter(is_settled=True)
+        elif value == 'false':
+            return queryset.filter(is_settled=False)
+        return queryset
 
 @admin.register(models.FacilitySetting)
 class FacilitySettingAdmin(admin.ModelAdmin):
@@ -31,7 +67,6 @@ class FacilityAdmin(admin.ModelAdmin):
         "shareholder",
         "amount_received",
         "total_payment",
-        "remaining_balance",
         "total_debt",
         "is_overdue",
         "delay_repayment_penalty",
@@ -49,13 +84,12 @@ class FacilityAdmin(admin.ModelAdmin):
         "tax_rate",
         "total_shares",
         "total_payment",
-        "remaining_balance",
         "total_debt",
         "is_overdue",
         "created_at",
         "updated_at",
     )
-    list_filter = ("start_date", "end_date", "facility_type", "is_overdue")
+    list_filter = ("start_date", "end_date", "facility_type")
 
     search_fields = (
         "shareholder__name",
