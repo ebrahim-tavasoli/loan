@@ -72,7 +72,7 @@ class Command(BaseCommand):
                 "fa_name": "درصد جریمه روزانه دیر کرد باز پرداخت تسهیلات",
                 "value": "0.10",
             },
-                {
+            {
                 "name": "rate_of_facility_use_for_other_purpose_penalty",
                 "fa_name": "درصد جریمه استفاده از تسهیلات به منظور هدفی غیر از دکر شده در قرارداد",
                 "value": "18",

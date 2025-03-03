@@ -11,4 +11,9 @@ def return_pdf(html_content, filename):
     html.write_pdf(buffer)
 
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=False, content_type="application/pdf", filename=f"{filename}.pdf")
+    return FileResponse(
+        buffer,
+        as_attachment=False,
+        content_type="application/pdf",
+        filename=f"{filename}.pdf",
+    )

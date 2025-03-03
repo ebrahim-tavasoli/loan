@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.admin import SimpleListFilter
-from django.db.models import Q
+from django.urls import reverse
+from django.utils.html import format_html
 
 from shareholder import models
 from facility import models as facility_models
@@ -64,6 +65,7 @@ class ShareholderAdmin(admin.ModelAdmin):
         "total_repayments_in_year",
         "total_delay_penalty_display",
         "has_debt",
+        "view_contract_link",
     )
     search_fields = ("accounting_code", "melli_code", "name", "phone", "address")
     readonly_fields = (
@@ -80,6 +82,12 @@ class ShareholderAdmin(admin.ModelAdmin):
     )
 
     inlines = [ShareInline, FacilityInline]
+
+    def view_contract_link(self, obj):
+        url = reverse("shareholder:shareholder_contract", args=[obj.id])
+        return format_html('<a href="{}" target="_blank">مشاهده گواهی</a>', url)
+
+    view_contract_link.short_description = "گواهی سهام"
 
     def get_good_facility_amount(self, obj):
         return int(obj.good_facility_amount)

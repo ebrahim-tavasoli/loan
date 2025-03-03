@@ -89,9 +89,15 @@ class Facility(models.Model):
     start_date = jmodels.jDateField("تاریخ پرداخت")
     end_date = jmodels.jDateField("تاریخ سر رسید")
     purchase_item = models.CharField("برای خرید", max_length=255, blank=True, null=True)
-    for_target = models.CharField("برای تامین بخشی از", max_length=255, blank=True, null=True)
-    power_of_attorney_number = models.CharField("شماره وکالت نامه", max_length=255, blank=True, null=True)
-    power_of_attorney_date = jmodels.jDateField("تاریخ وکالت نامه", blank=True, null=True)
+    for_target = models.CharField(
+        "برای تامین بخشی از", max_length=255, blank=True, null=True
+    )
+    power_of_attorney_number = models.CharField(
+        "شماره وکالت نامه", max_length=255, blank=True, null=True
+    )
+    power_of_attorney_date = jmodels.jDateField(
+        "تاریخ وکالت نامه", blank=True, null=True
+    )
     description = models.TextField("توضیحات", blank=True, null=True)
     is_settled = models.BooleanField("تسویه شده", default=False)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
@@ -220,7 +226,7 @@ class Facility(models.Model):
             )
 
     @property
-    def total_deductions(self): # جمع کسورات
+    def total_deductions(self):  # جمع کسورات
         if (
             self.amount_received is None
             or self.insurance_rate is None
@@ -228,11 +234,7 @@ class Facility(models.Model):
             or self.interest_rate is None
         ):
             return 0
-        return int(
-            self.insurance_amount 
-            + self.tax_amount
-            + self.profit
-        )
+        return int(self.insurance_amount + self.tax_amount + self.profit)
 
     @property
     def total_payment(self):
@@ -321,11 +323,13 @@ def fill_facility_fields(sender, instance, created, **kwargs):
         instance.tax_rate = tax_rate
         instance.save()
 
+
 @receiver(post_save, sender=FacilityRepayment)
 def set_facility_settled(sender, instance, created, **kwargs):
     if not instance.facility.total_debt > 0:
         instance.facility.is_settled = True
         instance.facility.save()
+
 
 class Guarantor(models.Model):
     facility = models.ForeignKey(

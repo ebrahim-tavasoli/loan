@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 import jdatetime
-from .models import Facility
+from .models import Facility, FacilitySetting
 from loan.logics import return_pdf
 
 
@@ -68,22 +68,28 @@ def generate_contract_view(request, facility_id):
         "purchase_item": facility.purchase_item if facility.purchase_item else "...",
         "for_target": facility.for_target if facility.for_target else "...",
         "power_of_attorney_number": (
-            facility.power_of_attorney_number if facility.power_of_attorney_number else "..."
+            facility.power_of_attorney_number
+            if facility.power_of_attorney_number
+            else "..."
         ),
         "power_of_attorney_date": (
-            facility.power_of_attorney_date if facility.power_of_attorney_date else "..."
+            facility.power_of_attorney_date
+            if facility.power_of_attorney_date
+            else "..."
         ),
         "start_date": facility.start_date if facility.start_date else "...",
         "end_date": facility.end_date if facility.end_date else "...",
         "facility_type": facility.facility_type if facility.facility_type else "...",
-        "delay_repayment_penalty": facility.delay_repayment_penalty if facility.delay_repayment_penalty else "...",
+        "delay_repayment_penalty": (
+            facility.delay_repayment_penalty
+            if facility.delay_repayment_penalty
+            else "..."
+        ),
     }
 
     html_content = render_to_string("admin/facility/contract_template.html", context)
-    filename = context.get('contract_number')
+    filename = context.get("contract_number")
     return return_pdf(html_content, f"{filename}.pdf")
-
-
 
 
 def generate_form4_view(request, facility_id):
@@ -100,8 +106,8 @@ def generate_form4_view(request, facility_id):
     context = {
         "facility": facility,
         "county_name": shareholder.city,
-        "meeting_number": "...", # TODO: What is this?
-        "meeting_date": "...", # TODO: What is this?
+        "meeting_number": "...",  # TODO: What is this?
+        "meeting_date": "...",  # TODO: What is this?
         "borrower_name": shareholder.name,
         "amount_requested": facility.amount if facility.amount else "...",
         "amount_received": (
@@ -123,50 +129,117 @@ def generate_form4_view(request, facility_id):
     }
 
     html_content = render_to_string("admin/facility/form4_template.html", context)
-    filename = context.get('facility').id
+    filename = context.get("facility").id
     return return_pdf(html_content, f"{filename}.pdf")
 
 
 def generate_financial_report(request, year=None):
-    """Generate the financial report for a given Persian year"""
+    """Generate monthly financial report for a given Persian fiscal year (Unique Starts)"""
 
     today_jalali = jdatetime.date.today()
-    start_of_year = jdatetime.date(today_jalali.year, 10, 1)  # 1 Dey
-    end_of_year = jdatetime.date(today_jalali.year + 1, 2, 30)  # 30 Ordibehesht
+    year = year if year is not None else today_jalali.year
 
-    # Fetch facilities within the selected year range
-    facilities = Facility.objects.filter(
-        start_date__gte=start_of_year, end_date__lte=end_of_year
+    # Get fiscal year start and end dates
+    fiscal_start = FacilitySetting.current_fiscal_year_start_date()
+    if year != today_jalali.year:
+        fiscal_start = jdatetime.date(year, fiscal_start.month, fiscal_start.day)
+
+    fiscal_end_year = fiscal_start.year + 1
+    fiscal_end_month = fiscal_start.month
+    fiscal_end_day = fiscal_start.day
+    days_in_end_month = 31 if fiscal_end_month <= 6 else (
+        30 if fiscal_end_month <= 11 else (30 if jdatetime.date(fiscal_end_year, 12, 1).isleap() else 29))
+    fiscal_end = jdatetime.date(fiscal_end_year, fiscal_end_month,
+                                min(fiscal_end_day, days_in_end_month)) - jdatetime.timedelta(days=1)
+
+    # Define month names in Persian
+    month_names = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن',
+                   'اسفند']
+
+    # Fetch all facilities active in the fiscal year
+    all_facilities = Facility.objects.filter(
+        start_date__lte=fiscal_end,
+        end_date__gte=fiscal_start
     )
+    total_unique_cases = all_facilities.count()
 
-    total_loans = sum(f.amount_received or 0 for f in facilities)
-    total_definite_income = sum(f.definite_income or 0 for f in facilities)
-    total_transferred_income = sum(f.transferred_income or 0 for f in facilities)
-    total_insurance = sum(f.insurance_amount or 0 for f in facilities)
-    total_tax = sum(f.tax_amount or 0 for f in facilities)
-    total_net_payments = sum(f.remaining_balance or 0 for f in facilities)
-    total_repayments = sum(f.total_payment or 0 for f in facilities)
+    # Prepare monthly data
+    rows = []
+    total_loans = 0
+    total_definite_income = 0
+    total_transferred_income = 0
+    total_insurance = 0
+    total_tax = 0
+    total_net_payments = 0
+    total_repayments = 0
 
-    rows = [
-        {
+    for i in range(12):
+        month_offset = (fiscal_start.month - 1 + i) % 12
+        month = month_offset + 1
+        year_adj = fiscal_start.year + ((fiscal_start.month - 1 + i) // 12)
+
+        start_date = jdatetime.date(year_adj, month, 1)
+        days_in_month = 31 if month <= 6 else (
+            30 if month <= 11 else (30 if jdatetime.date(year_adj, 12, 1).isleap() else 29))
+        end_date = jdatetime.date(year_adj, month, days_in_month)
+        if end_date > fiscal_end:
+            end_date = fiscal_end
+
+        # Count facilities starting in this month
+        facilities_starting = all_facilities.filter(
+            start_date__gte=start_date,
+            start_date__lte=end_date
+        )
+        num_cases = facilities_starting.count()
+
+        # Calculate prorated financial metrics for active facilities
+        month_loans = 0
+        month_definite_income = 0
+        month_transferred_income = 0
+        month_insurance = 0
+        month_tax = 0
+        month_net_payments = 0
+
+        for facility in all_facilities:
+            if facility.start_date <= end_date and facility.end_date >= start_date:
+                period_start = max(facility.start_date, start_date)
+                period_end = min(facility.end_date, end_date)
+                days_in_month_for_facility = (period_end - period_start).days + 1
+                total_days = (facility.end_date - facility.start_date).days + 1
+
+                month_loans += (facility.amount_received or 0) * days_in_month_for_facility // total_days
+                month_definite_income += (facility.definite_income or 0) * days_in_month_for_facility // total_days
+                month_transferred_income += (
+                                                        facility.transferred_income or 0) * days_in_month_for_facility // total_days
+                month_insurance += (facility.insurance_amount or 0) * days_in_month_for_facility // total_days
+                month_tax += (facility.tax_amount or 0) * days_in_month_for_facility // total_days
+                month_net_payments += (facility.total_payment or 0) * days_in_month_for_facility // total_days
+
+        rows.append({
             "index": i + 1,
-            "company_name": facility.shareholder.name,
-            "start_date": facility.start_date.strftime("%Y/%m/%d"),
-            "end_date": facility.end_date.strftime("%Y/%m/%d"),
-            "num_cases": facility.num_cases if hasattr(facility, "num_cases") else 0,
-            "amount_received": facility.amount_received or 0,
-            "total_payment": facility.total_payment or 0,  # کل درآمد
-            "added_value": facility.tax_amount or 0,  # ارزش افزوده
-            "insurance": facility.insurance_amount or 0,  # بیمه
-            "definite_income": facility.definite_income or 0,  # درآمد قطعی
-            "transferred_income": facility.transferred_income or 0,  # درآمد انتقالی
-            "net_payment": facility.remaining_balance or 0,  # خالص پرداختی
-        }
-        for i, facility in enumerate(facilities)
-    ]
+            "company_name": month_names[month_offset],
+            "start_date": start_date.strftime("%Y/%m/%d"),
+            "end_date": end_date.strftime("%Y/%m/%d"),
+            "num_cases": num_cases,
+            "amount_received": month_loans,
+            "total_payment": month_net_payments,
+            "added_value": month_tax,
+            "insurance": month_insurance,
+            "definite_income": month_definite_income,
+            "transferred_income": month_transferred_income,
+            "net_payment": month_net_payments - (month_tax + month_insurance),
+        })
+
+        total_loans += month_loans
+        total_definite_income += month_definite_income
+        total_transferred_income += month_transferred_income
+        total_insurance += month_insurance
+        total_tax += month_tax
+        total_net_payments += month_net_payments - (month_tax + month_insurance)
+        total_repayments += month_net_payments
 
     context = {
-        "year": today_jalali.year,
+        "year": year,
         "facilities": rows,
         "total_loans": total_loans,
         "total_definite_income": total_definite_income,
@@ -175,6 +248,7 @@ def generate_financial_report(request, year=None):
         "total_tax": total_tax,
         "total_net_payments": total_net_payments,
         "total_repayments": total_repayments,
+        "total_cases": total_unique_cases,
     }
 
     html_content = render_to_string("admin/facility/financial_report.html", context)

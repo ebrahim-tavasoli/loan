@@ -9,41 +9,48 @@ import jdatetime
 
 from facility import models
 
+
 class OverDuePenaltyFilter(admin.SimpleListFilter):
-    title = 'جریمه دیرکرد'
-    parameter_name = 'payment_status'
+    title = "جریمه دیرکرد"
+    parameter_name = "payment_status"
 
     def lookups(self, request, model_admin):
         return (
-            ('true', 'دارد'),
-            ('false', 'ندارد'),
+            ("true", "دارد"),
+            ("false", "ندارد"),
         )
 
     def queryset(self, request, queryset):
         value = self.value()
-        if value == 'true':
-            return queryset.filter(end_date__lt=jdatetime.datetime.now(), is_settled=False)
-        elif value == 'false':
-            return queryset.filter(Q(end_date__gte=jdatetime.datetime.now()) | Q(is_settled=True))
+        if value == "true":
+            return queryset.filter(
+                end_date__lt=jdatetime.datetime.now(), is_settled=False
+            )
+        elif value == "false":
+            return queryset.filter(
+                Q(end_date__gte=jdatetime.datetime.now()) | Q(is_settled=True)
+            )
         return queryset
+
 
 class HasDebtFilter(admin.SimpleListFilter):
-    title = 'دارای بدهی'
-    parameter_name = 'has_debt'
+    title = "دارای بدهی"
+    parameter_name = "has_debt"
 
     def lookups(self, request, model_admin):
         return (
-            ('true', 'دارد'),
-            ('false', 'ندارد'),
+            ("true", "دارد"),
+            ("false", "ندارد"),
         )
-    
+
     def queryset(self, request, queryset):
         value = self.value()
-        if value == 'true':
+        if value == "true":
             return queryset.filter(is_settled=True)
-        elif value == 'false':
+        elif value == "false":
             return queryset.filter(is_settled=False)
         return queryset
+
 
 @admin.register(models.FacilitySetting)
 class FacilitySettingAdmin(admin.ModelAdmin):
@@ -89,7 +96,13 @@ class FacilityAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_filter = ("start_date", "end_date", "facility_type", OverDuePenaltyFilter, HasDebtFilter)
+    list_filter = (
+        "start_date",
+        "end_date",
+        "facility_type",
+        OverDuePenaltyFilter,
+        HasDebtFilter,
+    )
 
     search_fields = (
         "shareholder__name",
@@ -146,7 +159,8 @@ class FacilityAdmin(admin.ModelAdmin):
     def generate_financial_report(self, obj):
         """Generate a financial report link dynamically based on the object's year."""
         if obj.start_date:
-            jalali_year = jdatetime.date.fromgregorian(date=obj.start_date).year
+            # start_date is already a jDateField, so just use its year
+            jalali_year = obj.start_date.year
             url = reverse("facility:financial_report", args=[jalali_year])
             return format_html('<a href="{}" target="_blank">📊 گزارش مالی</a>', url)
         return "..."
