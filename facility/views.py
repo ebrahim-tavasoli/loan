@@ -89,7 +89,7 @@ def generate_contract_view(request, facility_id):
 
     html_content = render_to_string("admin/facility/contract_template.html", context)
     filename = context.get("contract_number")
-    return return_pdf(html_content, f"{filename}.pdf")
+    return return_pdf(html_content, f"{filename}")
 
 
 def generate_form4_view(request, facility_id):
@@ -130,7 +130,7 @@ def generate_form4_view(request, facility_id):
 
     html_content = render_to_string("admin/facility/form4_template.html", context)
     filename = context.get("facility").id
-    return return_pdf(html_content, f"{filename}.pdf")
+    return return_pdf(html_content, f"{filename}")
 
 
 def generate_financial_report(request, year=None):
@@ -252,4 +252,4 @@ def generate_financial_report(request, year=None):
     }
 
     html_content = render_to_string("admin/facility/financial_report.html", context)
-    return return_pdf(html_content, "report.pdf")
+    return return_pdf(html_content, "report")
