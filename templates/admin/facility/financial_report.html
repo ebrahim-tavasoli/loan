@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>گزارش مالی سال {{ year }}</title>
+    <style>
+        body { font-family: 'Tahoma', sans-serif; direction: rtl; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        tfoot td { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>گزارش مالی سال {{ year }}</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ردیف</th>
+                <th>شرکت / اتحادیه</th>
+                <th>از تاریخ</th>
+                <th>تا تاریخ</th>
+                <th>تعداد پرونده‌ها</th>
+                <th>کل تسهیلات پرداختی</th>
+                <th>کل درآمد</th>
+                <th>ارزش افزوده</th>
+                <th>بیمه</th>
+                <th>درآمد قطعی</th>
+                <th>درآمد انتقالی</th>
+                <th>خالص پرداختی</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in facilities %}
+            <tr>
+                <td>{{ row.index }}</td>
+                <td>{{ row.company_name }}</td>
+                <td>{{ row.start_date }}</td>
+                <td>{{ row.end_date }}</td>
+                <td>{{ row.num_cases }}</td>
+                <td>{{ row.amount_received }}</td>
+                <td>{{ row.total_payment }}</td>
+                <td>{{ row.added_value }}</td>
+                <td>{{ row.insurance }}</td>
+                <td>{{ row.definite_income }}</td>
+                <td>{{ row.transferred_income }}</td>
+                <td>{{ row.net_payment }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4"><strong>جمع کل</strong></td>
+                <td>—</td>
+                <td>{{ total_loans }}</td>
+                <td>{{ total_repayments }}</td>
+                <td>{{ total_tax }}</td>
+                <td>{{ total_insurance }}</td>
+                <td>{{ total_definite_income }}</td>
+                <td>{{ total_transferred_income }}</td>
+                <td>{{ total_net_payments }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

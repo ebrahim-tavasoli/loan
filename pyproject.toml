@@ -1,0 +1,18 @@
+[project]
+name = "loan"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dj-database-url>=2.3.0",
+    "django>=5.1.6",
+    "django-debug-toolbar>=5.0.1",
+    "django-jalali>=7.3.0",
+    "django-tinymce>=4.1.0",
+    "gunicorn>=23.0.0",
+    "psycopg[binary]>=3.2.4",
+    "python-decouple>=3.8",
+    "ruff>=0.9.5",
+    "weasyprint>=64.0",
+]

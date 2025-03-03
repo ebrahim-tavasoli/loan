@@ -1,0 +1,67 @@
+services:
+  init:
+    build: .
+    image: baghdaran:latest
+    command: sh -c "./manage.py collectstatic --noinput && ./manage.py migrate"
+    volumes:
+      - ./media:/app/media
+      - ./static:/app/static
+      - ./:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  web:
+    image: baghdaran:latest
+    command: sh -c "./manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./media:/app/media
+      - ./static:/app/static
+      - ./:/app
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: always
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    expose:
+      - 8000
+
+  db:
+    image: postgres:16
+    env_file:
+      - .env
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: always
+    expose:
+      - 5432
+
+  nginx:
+    image: nginx:1.25
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./static:/usr/share/nginx/html/static
+      - ./media:/usr/share/nginx/html/media
+    restart: always
+    depends_on:
+      web:
+        condition: service_healthy

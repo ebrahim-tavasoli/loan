@@ -1,0 +1,71 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+static/
+local_settings.py
+
+# PostgreSQL
+*.psql
+*.pgsql
+*.sql
+*.dump
+
+# Docker
+.docker/
+docker-compose.override.yml
+.env
+.env.*
+!.env.example
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+.idea_modules/
+out/
+
+# Cursor IDE
+.cursor/
+.cursor-server/
+.cursor.json
+
+# Ruff
+.ruff_cache/
+.ruff.toml
+
+# Coverage and testing
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+htmlcov/
+.pytest_cache/
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# Development files
+*.swp
+*.swo
+*~
