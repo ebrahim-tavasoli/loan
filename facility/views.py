@@ -8,11 +8,13 @@ def generate_contract_view(request, facility_id):
     facility = get_object_or_404(Facility, pk=facility_id)
     shareholder = facility.shareholder
 
-    # Fetch all financial instruments
-    checks = facility.financial_instruments.filter(instrument_type="check")
-    promissory_notes = facility.financial_instruments.filter(
-        instrument_type="promissory_note"
-    )
+    # Fetch financial instruments (checks & promissory notes)
+    financial_instruments = facility.financial_instruments.all()
+    checks = financial_instruments.filter(instrument_type="check")
+    promissory_notes = financial_instruments.filter(instrument_type="promissory_note")
+
+    # Fetch all guarantors related to this facility
+    guarantors = facility.guarantors.all()
 
     context = {
         "facility": facility,
@@ -22,6 +24,8 @@ def generate_contract_view(request, facility_id):
         "amount_in_words": (
             str(facility.amount_received) if facility.amount_received else "..."
         ),
+        "loan_amount": facility.amount_received,
+        "loan_amount_words": ".............",
         "due_date": facility.end_date if facility.end_date else "...",
         "duration_months": (
             ((facility.end_date - facility.start_date).days // 30)
@@ -38,10 +42,10 @@ def generate_contract_view(request, facility_id):
         "borrower_national_id": (
             shareholder.melli_code if shareholder.melli_code else "..."
         ),
-        "borrower_city": shareholder.address if shareholder.address else "...",
+        "borrower_city": shareholder.city if shareholder.city else "...",
         "borrower_phone": shareholder.phone if shareholder.phone else "...",
         # Check Details
-        "check_count": len(checks),
+        "check_count": checks.count(),
         "check_number": checks[0].number if checks else "...",
         "account_number": checks[0].account_number if checks else "...",
         "bank_name": checks[0].bank_name if checks else "...",
@@ -56,14 +60,33 @@ def generate_contract_view(request, facility_id):
         "promissory_note_amount": (
             promissory_notes[0].amount if promissory_notes else "..."
         ),
+        # Guarantor List
+        "guarantors": guarantors,
+        # Additional Facility Details
+        "purchase_item": facility.purchase_item if facility.purchase_item else "...",
+        "for_target": facility.for_target if facility.for_target else "...",
+        "power_of_attorney_number": (
+            facility.power_of_attorney_number if facility.power_of_attorney_number else "..."
+        ),
+        "power_of_attorney_date": (
+            facility.power_of_attorney_date if facility.power_of_attorney_date else "..."
+        ),
+        "start_date": facility.start_date if facility.start_date else "...",
+        "end_date": facility.end_date if facility.end_date else "...",
+        "facility_type": facility.facility_type if facility.facility_type else "...",
+        "delay_repayment_penalty": facility.delay_repayment_penalty if facility.delay_repayment_penalty else "...",
     }
 
     return render(request, "admin/facility/contract_template.html", context)
 
 
+
+
 def generate_form4_view(request, facility_id):
     """Render Form 4 template for a specific Facility"""
     facility = get_object_or_404(Facility, pk=facility_id)
+
+    shareholder = facility.shareholder
 
     guarantors = facility.guarantors.all()
     financial_instruments = facility.financial_instruments.all()
@@ -72,11 +95,10 @@ def generate_form4_view(request, facility_id):
 
     context = {
         "facility": facility,
-        "county_name": "نام شهرستان",
+        "county_name": shareholder.city,
         "meeting_number": "...",
         "meeting_date": "...",
-        # Loan Details
-        "borrower_name": facility.shareholder.name,
+        "borrower_name": shareholder.name,
         "amount_requested": facility.amount if facility.amount else "...",
         "amount_received": (
             facility.amount_received if facility.amount_received else "..."
@@ -89,17 +111,15 @@ def generate_form4_view(request, facility_id):
         "interest_rate": facility.interest_rate if facility.interest_rate else "...",
         "investment_type": facility.facility_type.fa_name,
         "description": facility.description if facility.description else "...",
-        # Financial Instruments
         "financial_instruments": financial_instruments,
-        # Guarantors
         "guarantors": guarantors,
-        # Receipt
         "receipt_number": first_instrument.number if first_instrument else "-",
-        "receipt_date": first_instrument.issued_by if first_instrument else "-",
+        "receipt_date": "..........",
         "receipt_amount": first_instrument.amount if first_instrument else "-",
     }
 
     return render(request, "admin/facility/form4_template.html", context)
+
 
 
 def generate_financial_report(request, year=None):

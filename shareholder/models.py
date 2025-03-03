@@ -15,6 +15,7 @@ class Shareholder(models.Model):
     father_name = models.CharField("نام پدر", max_length=255, blank=True, null=True)
     id_number = models.CharField("شماره شناسنامه", max_length=20, blank=True, null=True)
     phone = models.CharField("شماره تلفن", max_length=11)
+    city = models.CharField("شهر", max_length=255, blank=True, null=True)
     address = models.TextField("آدرس")
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)

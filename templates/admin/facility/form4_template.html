@@ -8,11 +8,12 @@
             font-family: 'B Nazanin', Tahoma;
             line-height: 1.8;
             margin: 40px;
+            text-align: right;
         }
         .table-container {
-            margin: 20px 0;
             width: 100%;
             border-collapse: collapse;
+            margin: 20px 0;
         }
         .table-container th, .table-container td {
             border: 1px solid black;
@@ -22,15 +23,10 @@
         .signature-section {
             margin-top: 50px;
         }
-        .flex-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
         .placeholder {
             display: inline-block;
             border-bottom: 1px dotted black;
-            min-width: 150px;
+            min-width: 100px;
         }
     </style>
 </head>
@@ -38,98 +34,35 @@
     <h2 style="text-align: center;">بسمه تعالی</h2>
     <h2 style="text-align: center;">فرم ۴</h2>
 
-    <p>مدیرعامل محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">{{ county_name }}</span></p>
+    <p>مدیرعامل محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">استهبان</span></p>
 
     <p>با سلام؛</p>
     <p>پیرو جلسه شماره <span class="placeholder">{{ meeting_number }}</span> مورخ <span class="placeholder">{{ meeting_date }}</span> هیأت مدیره محترم صندوق شهرستان و بررسی تقاضاهای سهامداران برای دریافت تسهیلات مالی کوتاه مدت، بدین‌وسیله موارد مشروحه در جدول زیر برای اجرا ابلاغ می‌گردد.</p>
 
-<table class="table-container">
-    <tr>
-        <th>نام متقاضی</th>
-        <th>مبلغ درخواستی (میلیون ریال)</th>
-        <th>مبلغ دریافتی (میلیون ریال)</th>
-        <th>مدت تسهیلات (ماه)</th>
-        <th>نرخ کارمزد (درصد)</th>
-        <th>نوع و میزان نهاده</th>
-        <th>موضوع سرمایه‌گذاری</th>
-        <th>تضمین‌ها</th>
-        <th>توضیحات</th>
-    </tr>
-    <tr>
-        <td>{{ borrower_name }}</td>
-        <td>{{ amount_requested }}</td>
-        <td>{{ amount_received }}</td>
-        <td>{{ duration_months }}</td>
-        <td>{{ interest_rate }}</td>
-        <td>...</td>
-        <td>{{ investment_type }}</td>
-        <td>
-            {% for guarantee in guarantees %}
-                <p>{{ guarantee }}</p>
-            {% endfor %}
-        </td>
-        <td>{{ description }}</td>
-    </tr>
-</table>
-
-<h3>ضامنین</h3>
-<table class="table-container">
-    <tr>
-        <th>نام</th>
-        <th>نام پدر</th>
-        <th>شماره شناسنامه</th>
-        <th>کد ملی</th>
-        <th>محل صدور</th>
-        <th>آدرس</th>
-        <th>شماره تلفن</th>
-    </tr>
-    {% for guarantor in guarantors %}
-    <tr>
-        <td>{{ guarantor.name }}</td>
-        <td>{{ guarantor.father_name|default:"-" }}</td>
-        <td>{{ guarantor.id_number|default:"-" }}</td>
-        <td>{{ guarantor.national_id|default:"-" }}</td>
-        <td>{{ guarantor.issued_by|default:"-" }}</td>
-        <td>{{ guarantor.address }}</td>
-        <td>{{ guarantor.phone }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="7">هیچ ضامنی ثبت نشده است.</td>
-    </tr>
-    {% endfor %}
-</table>
-
-<h3>چک و سفته</h3>
-<table class="table-container">
-    <tr>
-        <th>نوع</th>
-        <th>شماره</th>
-        <th>مبلغ</th>
-        <th>صادر کننده / بانک</th>
-    </tr>
-    {% for instrument in financial_instruments %}
-    <tr>
-        <td>{{ instrument.get_instrument_type_display }}</td>
-        <td>{{ instrument.number }}</td>
-        <td>{{ instrument.amount }} ریال</td>
-        <td>{{ instrument.issued_by|default:instrument.bank_name|default:"-" }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="4">بدون تضمین</td>
-    </tr>
-    {% endfor %}
-</table>
-
-<h3>رسید دریافت چک تسهیلات:</h3>
-<p>اینجانب چک شماره <span class="placeholder">{{ receipt_number }}</span> به تاریخ <span class="placeholder">{{ receipt_date }}</span> به مبلغ <span class="placeholder">{{ receipt_amount }}</span> ریال را از امور مالی صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">{{ county_name }}</span> دریافت نمودم.</p>
-
-<p style="text-align: left;">امضاء و اثر انگشت</p>
-
-    <h3>چک و سفته</h3>
-    <p>شماره چک: <span class="placeholder">{{ check_number }}</span> - تاریخ: <span class="placeholder">{{ check_date }}</span> - مبلغ: <span class="placeholder">{{ check_amount }}</span> ریال</p>
-    <p>شماره سفته: <span class="placeholder">{{ promissory_note_number }}</span> - مبلغ: <span class="placeholder">{{ promissory_note_amount }}</span> ریال</p>
+    <table class="table-container">
+        <tr>
+            <th>نام متقاضی</th>
+            <th>مبلغ درخواستی (میلیون ریال)</th>
+            <th>مبلغ تصویبی (میلیون ریال)</th>
+            <th>مدت تسهیلات (ماه)</th>
+            <th>نرخ کارمزد (درصد)</th>
+            <th>نوع و میزان نهاده</th>
+            <th>موضوع سرمایه‌گذاری</th>
+            <th>تضمین‌ها</th>
+            <th>توضیحات</th>
+        </tr>
+        <tr>
+            <td>{{ borrower_name }}</td>
+            <td>{{ amount_requested }}</td>
+            <td>{{ amount_received }}</td>
+            <td>{{ duration_months }}</td>
+            <td>{{ interest_rate }}</td>
+            <td>...</td>
+            <td>{{ investment_type }}</td>
+            <td>...</td>
+            <td>{{ description }}</td>
+        </tr>
+    </table>
 
     <p style="text-align: center;">رئیس هیأت مدیره صندوق</p>
 
@@ -140,9 +73,7 @@
     <p style="text-align: center;">مدیرعامل صندوق</p>
 
     <h3>رسید دریافت چک تسهیلات:</h3>
-    <p>اینجانب چک شماره <span class="placeholder">{{ receipt_number }}</span> به تاریخ <span class="placeholder">{{ start_date }}</span> به مبلغ <span class="placeholder">{{ amount_received }}</span> ریال را از امور مالی صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">{{ county_name }}</span> دریافت نمودم.</p>
-
+    <p>اینجانب {{ borrower_name }} چک شماره <span class="placeholder">{{ receipt_number }}</span> به تاریخ <span class="placeholder">{{ receipt_date }}</span> به مبلغ <span class="placeholder">{{ receipt_amount }}</span> ریال را از امور مالی صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">استهبان</span> دریافت نمودم.</p>
     <p style="text-align: left;">امضاء و اثر انگشت</p>
-
 </body>
 </html>
