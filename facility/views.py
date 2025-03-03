@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
+from django.template.loader import render_to_string
 import jdatetime
 from .models import Facility
+from loan.logics import return_pdf
 
 
 def generate_contract_view(request, facility_id):
@@ -77,7 +79,9 @@ def generate_contract_view(request, facility_id):
         "delay_repayment_penalty": facility.delay_repayment_penalty if facility.delay_repayment_penalty else "...",
     }
 
-    return render(request, "admin/facility/contract_template.html", context)
+    html_content = render_to_string("admin/facility/contract_template.html", context)
+    filename = context.get('contract_number')
+    return return_pdf(html_content, f"{filename}.pdf")
 
 
 
@@ -96,8 +100,8 @@ def generate_form4_view(request, facility_id):
     context = {
         "facility": facility,
         "county_name": shareholder.city,
-        "meeting_number": "...",
-        "meeting_date": "...",
+        "meeting_number": "...", # TODO: What is this?
+        "meeting_date": "...", # TODO: What is this?
         "borrower_name": shareholder.name,
         "amount_requested": facility.amount if facility.amount else "...",
         "amount_received": (
@@ -118,8 +122,9 @@ def generate_form4_view(request, facility_id):
         "receipt_amount": first_instrument.amount if first_instrument else "-",
     }
 
-    return render(request, "admin/facility/form4_template.html", context)
-
+    html_content = render_to_string("admin/facility/form4_template.html", context)
+    filename = context.get('facility').id
+    return return_pdf(html_content, f"{filename}.pdf")
 
 
 def generate_financial_report(request, year=None):
@@ -172,4 +177,5 @@ def generate_financial_report(request, year=None):
         "total_repayments": total_repayments,
     }
 
-    return render(request, "admin/facility/financial_report.html", context)
+    html_content = render_to_string("admin/facility/financial_report.html", context)
+    return return_pdf(html_content, "report.pdf")
