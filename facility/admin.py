@@ -77,7 +77,7 @@ class FacilityAdmin(admin.ModelAdmin):
         ),
         type(
             "FinancialInstrumentInline",
-            (admin.TabularInline,),
+            (admin.StackedInline,),
             {
                 "model": models.FinancialInstrument,
                 "extra": 1,

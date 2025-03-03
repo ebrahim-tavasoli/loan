@@ -88,6 +88,10 @@ class Facility(models.Model):
     )
     start_date = jmodels.jDateField("تاریخ پرداخت")
     end_date = jmodels.jDateField("تاریخ سر رسید")
+    puchase_item = models.CharField("برای خرید", max_length=255, blank=True, null=True)
+    for_target = models.CharField("برای تامین بخشی از", max_length=255, blank=True, null=True)
+    power_of_attorney_number = models.CharField("شماره وکالت نامه", max_length=255, blank=True, null=True)
+    power_of_attorney_date = jmodels.jDateField("تاریخ وکالت نامه", blank=True, null=True)
     description = models.TextField("توضیحات", blank=True, null=True)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
@@ -372,7 +376,6 @@ class FinancialInstrument(models.Model):
     instrument_type = models.CharField("نوع", max_length=20, choices=INSTRUMENT_TYPES)
     number = models.CharField("شماره", max_length=50, unique=True)
     amount = models.BigIntegerField("مبلغ")
-    issued_by = models.CharField("صادر کننده", max_length=255, blank=True, null=True)
 
     # Only for Checks
     account_number = models.CharField(
