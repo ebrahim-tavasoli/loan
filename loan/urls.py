@@ -18,6 +18,8 @@ Including another URLconf
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 admin.site.site_header = "صندوق توسعه کشاورزی"  # Changes the header text
 admin.site.site_title = "صندوق توسعه کشاورزی"  # Changes the browser tab title

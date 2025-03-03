@@ -5,11 +5,22 @@
     <meta charset="UTF-8">
     <title>قرارداد تسهیلات {{ facility_type }}</title>
     <style>
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-400.woff2' %}") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-700.woff2' %}") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+        }
         body {
-            font-family: 'Arial', 'Times New Roman', 'Tahoma';
+            font-family: Nazanin;
             line-height: 1.8;
             margin: 40px;
-            text-align: right;
         }
         .placeholder {
             display: inline-block;
@@ -28,8 +39,7 @@
             margin-bottom: 30px;
         }
         ol {
-            list-style-type: none;
-            padding-right: 0;
+            list-style-type: persian;
         }
         h4 {
             margin-bottom: 5px;
@@ -37,14 +47,11 @@
         .guarantor {
             margin-bottom: 20px;
         }
-        p, h3, h4 {
-            text-align: right;
-        }
     </style>
 </head>
 <body>
     <div style="text-align: center; margin-bottom: 20px;">
-        <img src="{% static 'tashilat1.jpg' %}" alt="Contract Image" style="max-width: 100%; height: auto;">
+        <img src="{% static 'facility/img/tashilat1.jpg' %}" alt="Contract Image" style="max-width: 100%; height: auto;">
     </div>
     <h1 style="text-align: center;">قرارداد تسهیلات {{ facility_type }}</h1>
 

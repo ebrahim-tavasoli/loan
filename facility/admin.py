@@ -75,7 +75,7 @@ class FacilityAdmin(admin.ModelAdmin):
         "amount_received",
         "total_payment",
         "total_debt",
-        "is_overdue",
+        "is_overdue", 
         "delay_repayment_penalty",
         "interest_rate",
         "start_date",
@@ -131,7 +131,7 @@ class FacilityAdmin(admin.ModelAdmin):
             },
         ),
     ]
-
+    
     actions = ["generate_contract"]
 
     def generate_contract(self, request, queryset):
@@ -188,6 +188,10 @@ class FacilityAdmin(admin.ModelAdmin):
         return obj.total_debt
 
     total_debt.short_description = "بدهی باقی‌مانده"
+
+    @admin.display(description='تاخر در پرداخت بدهی', boolean=True)
+    def is_overdue(self, obj):
+        return not obj.is_overdue
 
 
 @admin.register(models.FacilityRepayment)

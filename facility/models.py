@@ -111,7 +111,7 @@ class Facility(models.Model):
         return f"{self.shareholder.name} - {self.amount}"
 
     @property
-    def is_overdue(self):
+    def is_overdue(self) -> bool:
         return self.total_debt > 0 and self.end_date < jdatetime.date.today()
 
     @property
@@ -280,6 +280,7 @@ class Facility(models.Model):
     definite_days.fget.short_description = "روزهای قطعی"
     transferred_days.fget.short_description = "روزهای انتقالی"
     total_debt.fget.short_description = "بدهی کل"
+    is_overdue.fget.short_description = "تاخر در پرداخت بدهی"
 
 
 class FacilityRepayment(models.Model):
