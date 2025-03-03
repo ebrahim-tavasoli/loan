@@ -89,7 +89,7 @@ class FacilityAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_filter = ("start_date", "end_date", "facility_type")
+    list_filter = ("start_date", "end_date", "facility_type", OverDuePenaltyFilter, HasDebtFilter)
 
     search_fields = (
         "shareholder__name",
