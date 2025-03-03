@@ -88,7 +88,7 @@ class Facility(models.Model):
     )
     start_date = jmodels.jDateField("تاریخ پرداخت")
     end_date = jmodels.jDateField("تاریخ سر رسید")
-    puchase_item = models.CharField("برای خرید", max_length=255, blank=True, null=True)
+    purchase_item = models.CharField("برای خرید", max_length=255, blank=True, null=True)
     for_target = models.CharField("برای تامین بخشی از", max_length=255, blank=True, null=True)
     power_of_attorney_number = models.CharField("شماره وکالت نامه", max_length=255, blank=True, null=True)
     power_of_attorney_date = jmodels.jDateField("تاریخ وکالت نامه", blank=True, null=True)
