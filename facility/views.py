@@ -87,9 +87,12 @@ def generate_contract_view(request, facility_id):
         ),
     }
 
+    return render(request, "admin/facility/contract_template.html", context)
+
     html_content = render_to_string("admin/facility/contract_template.html", context)
     filename = context.get("contract_number")
     return return_pdf(html_content, f"{filename}")
+
 
 
 def generate_form4_view(request, facility_id):
