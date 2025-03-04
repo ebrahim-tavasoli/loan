@@ -7,32 +7,40 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('facility', '0007_financialinstrument_delete_promissorynote'),
+        ("facility", "0007_financialinstrument_delete_promissorynote"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='financialinstrument',
-            name='issued_by',
+            model_name="financialinstrument",
+            name="issued_by",
         ),
         migrations.AddField(
-            model_name='facility',
-            name='for_target',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='برای تامین بخشی از'),
+            model_name="facility",
+            name="for_target",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="برای تامین بخشی از"
+            ),
         ),
         migrations.AddField(
-            model_name='facility',
-            name='power_of_attorney_date',
-            field=django_jalali.db.models.jDateField(blank=True, null=True, verbose_name='تاریخ وکالت نامه'),
+            model_name="facility",
+            name="power_of_attorney_date",
+            field=django_jalali.db.models.jDateField(
+                blank=True, null=True, verbose_name="تاریخ وکالت نامه"
+            ),
         ),
         migrations.AddField(
-            model_name='facility',
-            name='power_of_attorney_number',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='شماره وکالت نامه'),
+            model_name="facility",
+            name="power_of_attorney_number",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="شماره وکالت نامه"
+            ),
         ),
         migrations.AddField(
-            model_name='facility',
-            name='puchase_item',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='برای خرید'),
+            model_name="facility",
+            name="puchase_item",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="برای خرید"
+            ),
         ),
     ]

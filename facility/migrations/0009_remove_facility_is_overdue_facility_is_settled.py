@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('facility', '0008_remove_financialinstrument_issued_by_and_more'),
+        ("facility", "0008_remove_financialinstrument_issued_by_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='facility',
-            name='is_overdue',
+            model_name="facility",
+            name="is_overdue",
         ),
         migrations.AddField(
-            model_name='facility',
-            name='is_settled',
-            field=models.BooleanField(default=False, verbose_name='تسویه شده'),
+            model_name="facility",
+            name="is_settled",
+            field=models.BooleanField(default=False, verbose_name="تسویه شده"),
         ),
     ]

@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shareholder', '0003_shareholder_father_name_shareholder_id_number'),
+        ("shareholder", "0003_shareholder_father_name_shareholder_id_number"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='shareholder',
-            name='city',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='شهر'),
+            model_name="shareholder",
+            name="city",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="شهر"
+            ),
         ),
     ]

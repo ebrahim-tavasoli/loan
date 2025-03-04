@@ -10,6 +10,7 @@ from django.shortcuts import render, HttpResponseRedirect
 import jdatetime
 from . import models
 
+
 class OverDuePenaltyFilter(admin.SimpleListFilter):
     title = "جریمه دیرکرد"
     parameter_name = "payment_status"
@@ -32,6 +33,7 @@ class OverDuePenaltyFilter(admin.SimpleListFilter):
             )
         return queryset
 
+
 class HasDebtFilter(admin.SimpleListFilter):
     title = "دارای بدهی"
     parameter_name = "has_debt"
@@ -50,6 +52,7 @@ class HasDebtFilter(admin.SimpleListFilter):
             return queryset.filter(is_settled=False)
         return queryset
 
+
 @admin.register(models.FacilitySetting)
 class FacilitySettingAdmin(admin.ModelAdmin):
     list_display = ("fa_name", "value")
@@ -57,12 +60,14 @@ class FacilitySettingAdmin(admin.ModelAdmin):
     readonly_fields = ("fa_name", "created_at", "updated_at")
     exclude = ("name",)
 
+
 @admin.register(models.FacilityType)
 class FacilityTypeAdmin(admin.ModelAdmin):
     list_display = ("fa_name", "percentage", "rate")
     search_fields = ("name", "percentage", "rate")
     readonly_fields = ("fa_name", "created_at", "updated_at")
     exclude = ("name",)
+
 
 @admin.register(models.Facility)
 class FacilityAdmin(admin.ModelAdmin):
@@ -153,8 +158,11 @@ class FacilityAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('financial-report/', self.admin_site.admin_view(self.generate_financial_report_view),
-                 name='facility_financial_report'),
+            path(
+                "financial-report/",
+                self.admin_site.admin_view(self.generate_financial_report_view),
+                name="facility_financial_report",
+            ),
         ]
         return custom_urls + urls
 
@@ -187,7 +195,9 @@ class FacilityAdmin(admin.ModelAdmin):
         """Add financial report button to the changelist page"""
         extra_context = extra_context or {}
         extra_context["show_financial_report_button"] = True
-        extra_context["financial_report_url"] = reverse("admin:facility_financial_report")
+        extra_context["financial_report_url"] = reverse(
+            "admin:facility_financial_report"
+        )
         return super().changelist_view(request, extra_context=extra_context)
 
     generate_contract_link.short_description = "قرارداد"
@@ -199,7 +209,9 @@ class FacilityAdmin(admin.ModelAdmin):
         return "-"
 
     def get_insurance_rate(self, obj):
-        if strtobool(models.FacilitySetting.objects.get(name="insurance_enabled").value):
+        if strtobool(
+            models.FacilitySetting.objects.get(name="insurance_enabled").value
+        ):
             return models.FacilitySetting.objects.get(name="insurance_rate").value
         return "-"
 
@@ -211,7 +223,7 @@ class FacilityAdmin(admin.ModelAdmin):
 
     total_debt.short_description = "بدهی باقی‌مانده"
 
-    @admin.display(description='تاخر در پرداخت بدهی', boolean=True)
+    @admin.display(description="تاخر در پرداخت بدهی", boolean=True)
     def is_overdue(self, obj):
         return not obj.is_overdue
 

@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from weasyprint import HTML
 import os
 
+
 def generate_contract_view(request, facility_id):
     """Render contract template with facility data and generate PDF"""
     facility = get_object_or_404(Facility, pk=facility_id)
@@ -96,15 +97,19 @@ def generate_contract_view(request, facility_id):
     static_root = os.path.join(base_dir, "staticfiles")
 
     # جایگزینی مسیرهای استاتیک با مسیرهای محلی برای WeasyPrint
-    html_string = html_string.replace(
-        '/static/facility/img/tashilat1.jpg',
-        f'file://{static_root}/facility/img/tashilat1.jpg'
-    ).replace(
-        '/static/facility/font/nazanin-400.woff2',
-        f'file://{static_root}/facility/font/nazanin-400.woff2'
-    ).replace(
-        '/static/facility/font/nazanin-700.woff2',
-        f'file://{static_root}/facility/font/nazanin-700.woff2'
+    html_string = (
+        html_string.replace(
+            "/static/facility/img/tashilat1.jpg",
+            f"file://{static_root}/facility/img/tashilat1.jpg",
+        )
+        .replace(
+            "/static/facility/font/nazanin-400.woff2",
+            f"file://{static_root}/facility/font/nazanin-400.woff2",
+        )
+        .replace(
+            "/static/facility/font/nazanin-700.woff2",
+            f"file://{static_root}/facility/font/nazanin-700.woff2",
+        )
     )
 
     # تولید PDF با WeasyPrint
@@ -112,8 +117,8 @@ def generate_contract_view(request, facility_id):
 
     # ارسال PDF به کاربر
     filename = context.get("contract_number")
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="contract_{filename}.pdf"'
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="contract_{filename}.pdf"'
     return response
 
 
@@ -159,28 +164,28 @@ def generate_form4_view(request, facility_id):
     static_root = os.path.join(base_dir, "staticfiles")
 
     # چک کردن مسیرها برای دیباگ
-    nazanin_400_path = os.path.join(static_root, "facility", "font", "nazanin-400.woff2")
-    nazanin_700_path = os.path.join(static_root, "facility", "font", "nazanin-700.woff2")
+    nazanin_400_path = os.path.join(
+        static_root, "facility", "font", "nazanin-400.woff2"
+    )
+    nazanin_700_path = os.path.join(
+        static_root, "facility", "font", "nazanin-700.woff2"
+    )
     print(f"Checking font paths:")
     print(f"nazanin-400.woff2 exists: {os.path.exists(nazanin_400_path)}")
     print(f"nazanin-700.woff2 exists: {os.path.exists(nazanin_700_path)}")
 
     # جایگزینی مسیرهای فونت‌ها با مسیرهای محلی برای WeasyPrint
     html_string = html_string.replace(
-        '/static/facility/font/nazanin-400.woff2',
-        f'file://{nazanin_400_path}'
-    ).replace(
-        '/static/facility/font/nazanin-700.woff2',
-        f'file://{nazanin_700_path}'
-    )
+        "/static/facility/font/nazanin-400.woff2", f"file://{nazanin_400_path}"
+    ).replace("/static/facility/font/nazanin-700.woff2", f"file://{nazanin_700_path}")
 
     # تولید PDF با WeasyPrint
     pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
 
     # ارسال PDF به کاربر
     filename = context.get("facility").id
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="form4_{filename}.pdf"'
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="form4_{filename}.pdf"'
     return response
 
 
@@ -195,17 +200,36 @@ def generate_financial_report(request, year=None):
     fiscal_end_year = fiscal_start.year + 1
     fiscal_end_month = fiscal_start.month
     fiscal_end_day = fiscal_start.day
-    days_in_end_month = 31 if fiscal_end_month <= 6 else (
-        30 if fiscal_end_month <= 11 else (30 if jdatetime.date(fiscal_end_year, 12, 1).isleap() else 29))
-    fiscal_end = jdatetime.date(fiscal_end_year, fiscal_end_month,
-                                min(fiscal_end_day, days_in_end_month)) - jdatetime.timedelta(days=1)
+    days_in_end_month = (
+        31
+        if fiscal_end_month <= 6
+        else (
+            30
+            if fiscal_end_month <= 11
+            else (30 if jdatetime.date(fiscal_end_year, 12, 1).isleap() else 29)
+        )
+    )
+    fiscal_end = jdatetime.date(
+        fiscal_end_year, fiscal_end_month, min(fiscal_end_day, days_in_end_month)
+    ) - jdatetime.timedelta(days=1)
 
-    month_names = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن',
-                   'اسفند']
+    month_names = [
+        "فروردین",
+        "اردیبهشت",
+        "خرداد",
+        "تیر",
+        "مرداد",
+        "شهریور",
+        "مهر",
+        "آبان",
+        "آذر",
+        "دی",
+        "بهمن",
+        "اسفند",
+    ]
 
     all_facilities = Facility.objects.filter(
-        start_date__lte=fiscal_end,
-        end_date__gte=fiscal_start
+        start_date__lte=fiscal_end, end_date__gte=fiscal_start
     )
     total_unique_cases = all_facilities.count()
 
@@ -224,15 +248,21 @@ def generate_financial_report(request, year=None):
         year_adj = fiscal_start.year + ((fiscal_start.month - 1 + i) // 12)
 
         start_date = jdatetime.date(year_adj, month, 1)
-        days_in_month = 31 if month <= 6 else (
-            30 if month <= 11 else (30 if jdatetime.date(year_adj, 12, 1).isleap() else 29))
+        days_in_month = (
+            31
+            if month <= 6
+            else (
+                30
+                if month <= 11
+                else (30 if jdatetime.date(year_adj, 12, 1).isleap() else 29)
+            )
+        )
         end_date = jdatetime.date(year_adj, month, days_in_month)
         if end_date > fiscal_end:
             end_date = fiscal_end
 
         facilities_starting = all_facilities.filter(
-            start_date__gte=start_date,
-            start_date__lte=end_date
+            start_date__gte=start_date, start_date__lte=end_date
         )
         num_cases = facilities_starting.count()
 
@@ -250,29 +280,54 @@ def generate_financial_report(request, year=None):
                 days_in_month_for_facility = (period_end - period_start).days + 1
                 total_days = (facility.end_date - facility.start_date).days + 1
 
-                month_loans += (facility.amount_received or 0) * days_in_month_for_facility // total_days
-                month_definite_income += (facility.definite_income or 0) * days_in_month_for_facility // total_days
+                month_loans += (
+                    (facility.amount_received or 0)
+                    * days_in_month_for_facility
+                    // total_days
+                )
+                month_definite_income += (
+                    (facility.definite_income or 0)
+                    * days_in_month_for_facility
+                    // total_days
+                )
                 month_transferred_income += (
-                    facility.transferred_income or 0) * days_in_month_for_facility // total_days
+                    (facility.transferred_income or 0)
+                    * days_in_month_for_facility
+                    // total_days
+                )
 
-                month_insurance += (facility.insurance_amount or 0) * days_in_month_for_facility // total_days
-                month_tax += (facility.tax_amount or 0) * days_in_month_for_facility // total_days
-                month_net_payments += (facility.total_payment or 0) * days_in_month_for_facility // total_days
+                month_insurance += (
+                    (facility.insurance_amount or 0)
+                    * days_in_month_for_facility
+                    // total_days
+                )
+                month_tax += (
+                    (facility.tax_amount or 0)
+                    * days_in_month_for_facility
+                    // total_days
+                )
+                month_net_payments += (
+                    (facility.total_payment or 0)
+                    * days_in_month_for_facility
+                    // total_days
+                )
 
-        rows.append({
-            "index": i + 1,
-            "company_name": month_names[month_offset],
-            "start_date": start_date.strftime("%Y/%m/%d"),
-            "end_date": end_date.strftime("%Y/%m/%d"),
-            "num_cases": num_cases,
-            "amount_received": month_loans,
-            "total_payment": month_net_payments,
-            "added_value": month_tax,
-            "insurance": month_insurance,
-            "definite_income": month_definite_income,
-            "transferred_income": month_transferred_income,
-            "net_payment": month_net_payments - (month_tax + month_insurance),
-        })
+        rows.append(
+            {
+                "index": i + 1,
+                "company_name": month_names[month_offset],
+                "start_date": start_date.strftime("%Y/%m/%d"),
+                "end_date": end_date.strftime("%Y/%m/%d"),
+                "num_cases": num_cases,
+                "amount_received": month_loans,
+                "total_payment": month_net_payments,
+                "added_value": month_tax,
+                "insurance": month_insurance,
+                "definite_income": month_definite_income,
+                "transferred_income": month_transferred_income,
+                "net_payment": month_net_payments - (month_tax + month_insurance),
+            }
+        )
 
         total_loans += month_loans
         total_definite_income += month_definite_income
@@ -300,19 +355,21 @@ def generate_financial_report(request, year=None):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     static_root = os.path.join(base_dir, "staticfiles")
 
-    nazanin_400_path = os.path.join(static_root, "facility", "font", "nazanin-400.woff2")
-    nazanin_700_path = os.path.join(static_root, "facility", "font", "nazanin-700.woff2")
+    nazanin_400_path = os.path.join(
+        static_root, "facility", "font", "nazanin-400.woff2"
+    )
+    nazanin_700_path = os.path.join(
+        static_root, "facility", "font", "nazanin-700.woff2"
+    )
 
     html_string = html_string.replace(
-        '/static/facility/font/nazanin-400.woff2',
-        f'file://{nazanin_400_path}'
-    ).replace(
-        '/static/facility/font/nazanin-700.woff2',
-        f'file://{nazanin_700_path}'
-    )
+        "/static/facility/font/nazanin-400.woff2", f"file://{nazanin_400_path}"
+    ).replace("/static/facility/font/nazanin-700.woff2", f"file://{nazanin_700_path}")
 
     pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
 
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="financial_report_{year}.pdf"'
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="financial_report_{year}.pdf"'
+    )
     return response
