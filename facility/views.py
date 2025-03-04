@@ -4,9 +4,12 @@ import jdatetime
 from .models import Facility, FacilitySetting
 from loan.logics import return_pdf
 
+from django.http import HttpResponse
+from weasyprint import HTML
+import os
 
 def generate_contract_view(request, facility_id):
-    """Render contract template with facility data"""
+    """Render contract template with facility data and generate PDF"""
     facility = get_object_or_404(Facility, pk=facility_id)
     shareholder = facility.shareholder
 
@@ -87,23 +90,40 @@ def generate_contract_view(request, facility_id):
         ),
     }
 
-    return render(request, "admin/facility/contract_template.html", context)
+    html_string = render_to_string("admin/facility/contract_template.html", context)
 
-    html_content = render_to_string("admin/facility/contract_template.html", context)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_root = os.path.join(base_dir, "staticfiles")
+
+    # جایگزینی مسیرهای استاتیک با مسیرهای محلی برای WeasyPrint
+    html_string = html_string.replace(
+        '/static/facility/img/tashilat1.jpg',
+        f'file://{static_root}/facility/img/tashilat1.jpg'
+    ).replace(
+        '/static/facility/font/nazanin-400.woff2',
+        f'file://{static_root}/facility/font/nazanin-400.woff2'
+    ).replace(
+        '/static/facility/font/nazanin-700.woff2',
+        f'file://{static_root}/facility/font/nazanin-700.woff2'
+    )
+
+    # تولید PDF با WeasyPrint
+    pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
+
+    # ارسال PDF به کاربر
     filename = context.get("contract_number")
-    return return_pdf(html_content, f"{filename}")
-
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="contract_{filename}.pdf"'
+    return response
 
 
 def generate_form4_view(request, facility_id):
-    """Render Form 4 template for a specific Facility"""
+    """Render Form 4 template for a specific Facility and generate PDF"""
     facility = get_object_or_404(Facility, pk=facility_id)
-
     shareholder = facility.shareholder
 
     guarantors = facility.guarantors.all()
     financial_instruments = facility.financial_instruments.all()
-
     first_instrument = financial_instruments.first()
 
     context = {
@@ -131,18 +151,43 @@ def generate_form4_view(request, facility_id):
         "receipt_amount": first_instrument.amount if first_instrument else "-",
     }
 
-    html_content = render_to_string("admin/facility/form4_template.html", context)
+    # رندر HTML به صورت رشته
+    html_string = render_to_string("admin/facility/form4_template.html", context)
+
+    # مسیر پایه پروژه و پوشه staticfiles
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_root = os.path.join(base_dir, "staticfiles")
+
+    # چک کردن مسیرها برای دیباگ
+    nazanin_400_path = os.path.join(static_root, "facility", "font", "nazanin-400.woff2")
+    nazanin_700_path = os.path.join(static_root, "facility", "font", "nazanin-700.woff2")
+    print(f"Checking font paths:")
+    print(f"nazanin-400.woff2 exists: {os.path.exists(nazanin_400_path)}")
+    print(f"nazanin-700.woff2 exists: {os.path.exists(nazanin_700_path)}")
+
+    # جایگزینی مسیرهای فونت‌ها با مسیرهای محلی برای WeasyPrint
+    html_string = html_string.replace(
+        '/static/facility/font/nazanin-400.woff2',
+        f'file://{nazanin_400_path}'
+    ).replace(
+        '/static/facility/font/nazanin-700.woff2',
+        f'file://{nazanin_700_path}'
+    )
+
+    # تولید PDF با WeasyPrint
+    pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
+
+    # ارسال PDF به کاربر
     filename = context.get("facility").id
-    return return_pdf(html_content, f"{filename}")
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="form4_{filename}.pdf"'
+    return response
 
 
 def generate_financial_report(request, year=None):
-    """Generate monthly financial report for a given Persian fiscal year (Unique Starts)"""
-
     today_jalali = jdatetime.date.today()
     year = year if year is not None else today_jalali.year
 
-    # Get fiscal year start and end dates
     fiscal_start = FacilitySetting.current_fiscal_year_start_date()
     if year != today_jalali.year:
         fiscal_start = jdatetime.date(year, fiscal_start.month, fiscal_start.day)
@@ -155,18 +200,15 @@ def generate_financial_report(request, year=None):
     fiscal_end = jdatetime.date(fiscal_end_year, fiscal_end_month,
                                 min(fiscal_end_day, days_in_end_month)) - jdatetime.timedelta(days=1)
 
-    # Define month names in Persian
     month_names = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن',
                    'اسفند']
 
-    # Fetch all facilities active in the fiscal year
     all_facilities = Facility.objects.filter(
         start_date__lte=fiscal_end,
         end_date__gte=fiscal_start
     )
     total_unique_cases = all_facilities.count()
 
-    # Prepare monthly data
     rows = []
     total_loans = 0
     total_definite_income = 0
@@ -188,14 +230,12 @@ def generate_financial_report(request, year=None):
         if end_date > fiscal_end:
             end_date = fiscal_end
 
-        # Count facilities starting in this month
         facilities_starting = all_facilities.filter(
             start_date__gte=start_date,
             start_date__lte=end_date
         )
         num_cases = facilities_starting.count()
 
-        # Calculate prorated financial metrics for active facilities
         month_loans = 0
         month_definite_income = 0
         month_transferred_income = 0
@@ -213,7 +253,8 @@ def generate_financial_report(request, year=None):
                 month_loans += (facility.amount_received or 0) * days_in_month_for_facility // total_days
                 month_definite_income += (facility.definite_income or 0) * days_in_month_for_facility // total_days
                 month_transferred_income += (
-                                                        facility.transferred_income or 0) * days_in_month_for_facility // total_days
+                    facility.transferred_income or 0) * days_in_month_for_facility // total_days
+
                 month_insurance += (facility.insurance_amount or 0) * days_in_month_for_facility // total_days
                 month_tax += (facility.tax_amount or 0) * days_in_month_for_facility // total_days
                 month_net_payments += (facility.total_payment or 0) * days_in_month_for_facility // total_days
@@ -254,5 +295,24 @@ def generate_financial_report(request, year=None):
         "total_cases": total_unique_cases,
     }
 
-    html_content = render_to_string("admin/facility/financial_report.html", context)
-    return return_pdf(html_content, "report")
+    html_string = render_to_string("admin/facility/financial_report.html", context)
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_root = os.path.join(base_dir, "staticfiles")
+
+    nazanin_400_path = os.path.join(static_root, "facility", "font", "nazanin-400.woff2")
+    nazanin_700_path = os.path.join(static_root, "facility", "font", "nazanin-700.woff2")
+
+    html_string = html_string.replace(
+        '/static/facility/font/nazanin-400.woff2',
+        f'file://{nazanin_400_path}'
+    ).replace(
+        '/static/facility/font/nazanin-700.woff2',
+        f'file://{nazanin_700_path}'
+    )
+
+    pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
+
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="financial_report_{year}.pdf"'
+    return response

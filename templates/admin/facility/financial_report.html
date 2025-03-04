@@ -1,18 +1,53 @@
+{% load static %}
+{% load persian %}
 <!DOCTYPE html>
 <html lang="fa">
 <head>
     <meta charset="UTF-8">
-    <title>گزارش مالی سال {{ year }}</title>
+    <title>گزارش مالی سال {{ year|to_persian_numbers }}</title>
     <style>
-        body { font-family: 'Tahoma', sans-serif; direction: rtl; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid black; padding: 8px; text-align: center; }
-        th { background-color: #007bff; color: white; }
-        tfoot td { font-weight: bold; }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-400.woff2' %}") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-700.woff2' %}") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+        }
+        @page {
+            margin: 0;
+            size: landscape;
+        }
+        body {
+            font-family: "Nazanin", sans-serif; /* تغییر به Nazanin */
+            direction: rtl;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tfoot td {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h2>گزارش مالی سال {{ year }}</h2>
+    <h2>گزارش مالی سال {{ year|to_persian_numbers }}</h2>
 
     <table>
         <thead>
@@ -34,32 +69,32 @@
         <tbody>
             {% for row in facilities %}
             <tr>
-                <td>{{ row.index }}</td>
+                <td>{{ row.index|to_persian_numbers }}</td>
                 <td>{{ row.company_name }}</td>
-                <td>{{ row.start_date }}</td>
-                <td>{{ row.end_date }}</td>
-                <td>{{ row.num_cases }}</td>
-                <td>{{ row.amount_received }}</td>
-                <td>{{ row.total_payment }}</td>
-                <td>{{ row.added_value }}</td>
-                <td>{{ row.insurance }}</td>
-                <td>{{ row.definite_income }}</td>
-                <td>{{ row.transferred_income }}</td>
-                <td>{{ row.net_payment }}</td>
+                <td>{{ row.start_date|to_persian_date }}</td>
+                <td>{{ row.end_date|to_persian_date }}</td>
+                <td>{{ row.num_cases|to_persian_numbers }}</td>
+                <td>{{ row.amount_received|to_persian_numbers }}</td>
+                <td>{{ row.total_payment|to_persian_numbers }}</td>
+                <td>{{ row.added_value|to_persian_numbers }}</td>
+                <td>{{ row.insurance|to_persian_numbers }}</td>
+                <td>{{ row.definite_income|to_persian_numbers }}</td>
+                <td>{{ row.transferred_income|to_persian_numbers }}</td>
+                <td>{{ row.net_payment|to_persian_numbers }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="4"><strong>جمع کل</strong></td>
-                <td>{{ total_cases }}</td> <!-- تعداد یکتای پرونده‌ها -->
-                <td>{{ total_loans }}</td>
-                <td>{{ total_repayments }}</td>
-                <td>{{ total_tax }}</td>
-                <td>{{ total_insurance }}</td>
-                <td>{{ total_definite_income }}</td>
-                <td>{{ total_transferred_income }}</td>
-                <td>{{ total_net_payments }}</td>
+                <td>{{ total_cases|to_persian_numbers }}</td>
+                <td>{{ total_loans|to_persian_numbers }}</td>
+                <td>{{ total_repayments|to_persian_numbers }}</td>
+                <td>{{ total_tax|to_persian_numbers }}</td>
+                <td>{{ total_insurance|to_persian_numbers }}</td>
+                <td>{{ total_definite_income|to_persian_numbers }}</td>
+                <td>{{ total_transferred_income|to_persian_numbers }}</td>
+                <td>{{ total_net_payments|to_persian_numbers }}</td>
             </tr>
         </tfoot>
     </table>

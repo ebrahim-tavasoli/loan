@@ -1,23 +1,66 @@
+{% load static %}
+{% load persian %}
 <!DOCTYPE html>
 <html lang="fa">
 <head>
     <meta charset="UTF-8">
     <title>گواهی سهام</title>
     <style>
-        body { font-family: 'Tahoma', sans-serif; direction: rtl; text-align: center; }
-        .certificate { border: 2px solid black; padding: 20px; width: 600px; margin: auto; }
-        .header { font-size: 20px; font-weight: bold; }
-        .content { margin-top: 20px; font-size: 16px; }
-        .signatures { margin-top: 40px; display: flex; justify-content: space-between; }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'shareholder/font/nazanin-400.woff2' %}") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'shareholder/font/nazanin-700.woff2' %}") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+        }
+        @page {
+            size: A4 landscape;
+            margin: 15mm;
+        }
+        body {
+            font-family: "Nazanin", sans-serif;
+            direction: rtl;
+            text-align: center;
+            line-height: 1.8;
+        }
+        .certificate {
+            border: 2px solid black;
+            padding: 20px;
+            width: 90%;
+            max-width: 900px;
+            margin: 20px auto;
+            box-sizing: border-box;
+        }
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .content {
+            font-size: 16px;
+        }
+        .content p {
+            margin: 10px 0;
+        }
+        .signatures {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
     <div class="certificate">
         <div class="header">گواهی سهام</div>
         <div class="content">
-            <p>بدینوسیله تایید می‌گردد که شرکت تعاونی باغداران استهبان به شماره ثبت 153 و شناسه ملی 10530042394</p>
-            <p>سهام شما نزد صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان تعداد <strong>{{ shares }}</strong> سهم</p>
-            <p>به مبلغ <strong>{{ amount }}</strong> ریال می‌باشد.</p>
+            <p>بدینوسیله تایید می‌گردد که شرکت تعاونی باغداران استهبان به شماره ثبت {{ "153"|to_persian_numbers }} و شناسه ملی {{ "10530042394"|to_persian_numbers }}</p>
+            <p>سهام شما نزد صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان تعداد <strong>{{ shares|to_persian_numbers }}</strong> سهم</p>
+            <p>به مبلغ <strong>{{ amount|to_persian_numbers }}</strong> ریال می‌باشد.</p>
             <p>دارنده سهام تابع قوانین و مقررات جاری و اساسنامه صندوق می‌باشد و نقل و انتقال تابع ضوابط مندرج در آیین‌نامه نقل و انتقال سهام مصوب مجمع عمومی صندوق می‌باشد.</p>
         </div>
         <div class="signatures">

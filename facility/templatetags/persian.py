@@ -11,11 +11,24 @@ def to_persian_numbers(value):
     return value.translate(fa_numbers)
 
 
+from datetime import datetime, date
+
+
 @register.filter
 def to_persian_date(value):
-    tmp = to_persian_numbers(value).split('-')
-    return f'{tmp[0]}/{tmp[1]}/{tmp[2]}'
+    if value is None:
+        return ''
 
+    if isinstance(value, (datetime, date)):
+        value = value.strftime('%Y-%m-%d')
+
+    # تبدیل به اعداد فارسی و تقسیم‌بندی
+    tmp = to_persian_numbers(value).split('-')
+
+    if len(tmp) == 3:
+        return f'{tmp[0]}/{tmp[1]}/{tmp[2]}'
+    else:
+        return value
 
 @register.filter
 def bold(value):

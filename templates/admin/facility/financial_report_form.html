@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div>
+    <h1>انتخاب سال مالی برای گزارش</h1>
+    <form method="post" action="">
+        {% csrf_token %}
+        <label for="year">سال مالی:</label>
+        <select name="year" id="year">
+            {% for year_value, year_range in years %}
+                <option value="{{ year_value }}" {% if year_value == current_year %}selected{% endif %}>{{ year_range }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="تولید گزارش مالی" class="default">
+    </form>
+</div>
+{% endblock %}

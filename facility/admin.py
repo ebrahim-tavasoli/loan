@@ -3,12 +3,12 @@ from django.urls import path, reverse
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils.html import format_html
-from django.http import HttpResponseRedirect
 from decouple import strtobool
 import jdatetime
-
 from facility import models
-
+from django.shortcuts import render, HttpResponseRedirect
+import jdatetime
+from . import models
 
 class OverDuePenaltyFilter(admin.SimpleListFilter):
     title = "جریمه دیرکرد"
@@ -32,7 +32,6 @@ class OverDuePenaltyFilter(admin.SimpleListFilter):
             )
         return queryset
 
-
 class HasDebtFilter(admin.SimpleListFilter):
     title = "دارای بدهی"
     parameter_name = "has_debt"
@@ -51,14 +50,12 @@ class HasDebtFilter(admin.SimpleListFilter):
             return queryset.filter(is_settled=False)
         return queryset
 
-
 @admin.register(models.FacilitySetting)
 class FacilitySettingAdmin(admin.ModelAdmin):
     list_display = ("fa_name", "value")
     search_fields = ("fa_name",)
     readonly_fields = ("fa_name", "created_at", "updated_at")
     exclude = ("name",)
-
 
 @admin.register(models.FacilityType)
 class FacilityTypeAdmin(admin.ModelAdmin):
@@ -67,7 +64,6 @@ class FacilityTypeAdmin(admin.ModelAdmin):
     readonly_fields = ("fa_name", "created_at", "updated_at")
     exclude = ("name",)
 
-
 @admin.register(models.Facility)
 class FacilityAdmin(admin.ModelAdmin):
     list_display = (
@@ -75,14 +71,13 @@ class FacilityAdmin(admin.ModelAdmin):
         "amount_received",
         "total_payment",
         "total_debt",
-        "is_overdue", 
+        "is_overdue",
         "delay_repayment_penalty",
         "interest_rate",
         "start_date",
         "end_date",
         "generate_contract_link",
         "generate_form4_link",
-        "generate_financial_report",
     )
     readonly_fields = (
         "amount",
@@ -103,7 +98,6 @@ class FacilityAdmin(admin.ModelAdmin):
         OverDuePenaltyFilter,
         HasDebtFilter,
     )
-
     search_fields = (
         "shareholder__name",
         "shareholder__member_id",
@@ -131,7 +125,7 @@ class FacilityAdmin(admin.ModelAdmin):
             },
         ),
     ]
-    
+
     actions = ["generate_contract"]
 
     def generate_contract(self, request, queryset):
@@ -156,18 +150,48 @@ class FacilityAdmin(admin.ModelAdmin):
         url = reverse("facility:generate_form4", args=[obj.id])
         return format_html('<a href="{}" target="_blank">📝 فرم ۴</a>', url)
 
-    def generate_financial_report(self, obj):
-        """Generate a financial report link dynamically based on the object's year."""
-        if obj.start_date:
-            # start_date is already a jDateField, so just use its year
-            jalali_year = obj.start_date.year
-            url = reverse("facility:financial_report", args=[jalali_year])
-            return format_html('<a href="{}" target="_blank">📊 گزارش مالی</a>', url)
-        return "..."
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('financial-report/', self.admin_site.admin_view(self.generate_financial_report_view),
+                 name='facility_financial_report'),
+        ]
+        return custom_urls + urls
+
+    def generate_financial_report_view(self, request):
+        """Custom view to select fiscal year and generate financial report"""
+        if request.method == "POST":
+            year = request.POST.get("year")
+            if year:
+                return HttpResponseRedirect(
+                    reverse("facility:financial_report", args=[year])
+                )
+
+        # پیدا کردن سال‌های مالی موجود
+        facilities = models.Facility.objects.all()
+        years = sorted(set(f.start_date.year for f in facilities if f.start_date))
+        current_year = jdatetime.date.today().year
+        if current_year not in years:
+            years.append(current_year)
+
+        # تبدیل سال‌ها به بازه‌ها (مثل 1403-1404)
+        year_ranges = [f"{year}-{year + 1}" for year in years]
+
+        context = {
+            "years": zip(years, year_ranges),
+            "current_year": current_year,
+        }
+        return render(request, "admin/facility/financial_report_form.html", context)
+
+    def changelist_view(self, request, extra_context=None):
+        """Add financial report button to the changelist page"""
+        extra_context = extra_context or {}
+        extra_context["show_financial_report_button"] = True
+        extra_context["financial_report_url"] = reverse("admin:facility_financial_report")
+        return super().changelist_view(request, extra_context=extra_context)
 
     generate_contract_link.short_description = "قرارداد"
     generate_form4_link.short_description = "فرم شماره ۴"
-    generate_financial_report.short_description = "گزارش مالی"
 
     def get_tax_rate(self, obj):
         if strtobool(models.FacilitySetting.objects.get(name="tax_enabled").value):
@@ -175,9 +199,7 @@ class FacilityAdmin(admin.ModelAdmin):
         return "-"
 
     def get_insurance_rate(self, obj):
-        if strtobool(
-            models.FacilitySetting.objects.get(name="insurance_enabled").value
-        ):
+        if strtobool(models.FacilitySetting.objects.get(name="insurance_enabled").value):
             return models.FacilitySetting.objects.get(name="insurance_rate").value
         return "-"
 
