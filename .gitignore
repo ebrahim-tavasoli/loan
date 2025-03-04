@@ -16,6 +16,7 @@ wheels/
 db.sqlite3
 media/
 static/
+staticfiles/
 !facility/static/
 local_settings.py
 
