@@ -96,7 +96,6 @@ def generate_contract_view(request, facility_id):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     static_root = os.path.join(base_dir, "staticfiles")
 
-    # جایگزینی مسیرهای استاتیک با مسیرهای محلی برای WeasyPrint
     html_string = (
         html_string.replace(
             "/static/facility/img/tashilat1.jpg",
@@ -112,10 +111,8 @@ def generate_contract_view(request, facility_id):
         )
     )
 
-    # تولید PDF با WeasyPrint
     pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
 
-    # ارسال PDF به کاربر
     filename = context.get("contract_number")
     response = HttpResponse(pdf_file, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="contract_{filename}.pdf"'
@@ -170,19 +167,13 @@ def generate_form4_view(request, facility_id):
     nazanin_700_path = os.path.join(
         static_root, "facility", "font", "nazanin-700.woff2"
     )
-    print(f"Checking font paths:")
-    print(f"nazanin-400.woff2 exists: {os.path.exists(nazanin_400_path)}")
-    print(f"nazanin-700.woff2 exists: {os.path.exists(nazanin_700_path)}")
-
-    # جایگزینی مسیرهای فونت‌ها با مسیرهای محلی برای WeasyPrint
     html_string = html_string.replace(
         "/static/facility/font/nazanin-400.woff2", f"file://{nazanin_400_path}"
     ).replace("/static/facility/font/nazanin-700.woff2", f"file://{nazanin_700_path}")
 
-    # تولید PDF با WeasyPrint
+
     pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
 
-    # ارسال PDF به کاربر
     filename = context.get("facility").id
     response = HttpResponse(pdf_file, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="form4_{filename}.pdf"'
