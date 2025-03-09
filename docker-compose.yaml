@@ -1,7 +1,7 @@
 services:
   init:
     build: .
-    image: baghdaran:latest
+    image: ebrahimtavasoli/loan:latest
     command: sh -c "./manage.py collectstatic --noinput && ./manage.py migrate"
     volumes:
       - ./media:/app/media
@@ -14,7 +14,7 @@ services:
       - .env
 
   web:
-    image: baghdaran:latest
+    image: ebrahimtavasoli/loan:latest
     command: sh -c "./manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./media:/app/media

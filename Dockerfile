@@ -13,7 +13,7 @@ COPY uv.lock .
 COPY .python-version .
 RUN uv sync --no-dev --locked
 
-COPY ./loan .
+COPY . .
 
 RUN chmod +x manage.py
 
