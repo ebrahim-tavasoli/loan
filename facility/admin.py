@@ -69,6 +69,30 @@ class FacilityTypeAdmin(admin.ModelAdmin):
     exclude = ("name",)
 
 
+class GuarantorInline(admin.StackedInline):
+    model = models.Guarantor
+    extra = 1
+
+    def get_queryset(self, request):
+        return models.Guarantor.objects.none()
+
+
+class FinancialInstrumentInline(admin.StackedInline):
+    model = models.FinancialInstrument
+    extra = 1
+
+    def get_queryset(self, request):
+        return models.FinancialInstrument.objects.none()
+
+
+class FacilityRepaymentInline(admin.TabularInline):
+    model = models.FacilityRepayment
+    extra = 1
+
+    def get_queryset(self, request):
+        return models.FacilityRepayment.objects.none()
+
+
 @admin.register(models.Facility)
 class FacilityAdmin(admin.ModelAdmin):
     list_display = (
@@ -113,22 +137,9 @@ class FacilityAdmin(admin.ModelAdmin):
     autocomplete_fields = ("shareholder",)
 
     inlines = [
-        type(
-            "FacilityRepaymentInline",
-            (admin.TabularInline,),
-            {
-                "model": models.FacilityRepayment,
-                "extra": 1,
-            },
-        ),
-        type(
-            "FinancialInstrumentInline",
-            (admin.StackedInline,),
-            {
-                "model": models.FinancialInstrument,
-                "extra": 1,
-            },
-        ),
+        FacilityRepaymentInline,
+        FinancialInstrumentInline,
+        GuarantorInline,
     ]
 
     actions = ["generate_contract"]
@@ -228,6 +239,7 @@ class FacilityAdmin(admin.ModelAdmin):
         return not obj.is_overdue
 
 
+
 @admin.register(models.FacilityRepayment)
 class FacilityRepaymentAdmin(admin.ModelAdmin):
     list_display = ("facility", "amount", "created_at")
@@ -240,12 +252,24 @@ class FacilityRepaymentAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created_at", "updated_at")
 
+    autocomplete_fields = ("facility",)
+
+    class Media:
+        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js"]
+
+
 
 @admin.register(models.Guarantor)
 class GuarantorAdmin(admin.ModelAdmin):
     list_display = ("facility", "name", "national_id", "phone")
     search_fields = ("name", "national_id", "phone")
     list_filter = ("facility",)
+
+    autocomplete_fields = ("facility",)
+
+    class Media:
+        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js"]
+
 
 
 @admin.register(models.FinancialInstrument)
@@ -260,3 +284,7 @@ class FinancialInstrumentAdmin(admin.ModelAdmin):
     )
     list_filter = ("instrument_type", "bank_name")
     search_fields = ("number", "facility__shareholder__name", "owner_name")
+    autocomplete_fields = ("facility",)
+
+    class Media:
+        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js"]
