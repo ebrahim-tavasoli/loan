@@ -123,7 +123,9 @@ class Share(models.Model):
     shareholder = models.ForeignKey(
         Shareholder, on_delete=models.CASCADE, verbose_name="سهامدار"
     )
+    share_number = models.IntegerField("تعداد سهام", default=0,)
     amount = models.IntegerField("مقدار سهام")
+    description = models.TextField("زمینه فعالیت", null=True, blank=True,)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
 
