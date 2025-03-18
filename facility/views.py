@@ -83,6 +83,7 @@ def generate_contract_view(request, facility_id):
         ),
         "start_date": facility.start_date if facility.start_date else "...",
         "end_date": facility.end_date if facility.end_date else "...",
+        "facility_days": facility.facility_days,
         "facility_type": facility.facility_type if facility.facility_type else "...",
         "delay_repayment_penalty": (
             facility.delay_repayment_penalty
@@ -131,8 +132,8 @@ def generate_form4_view(request, facility_id):
     context = {
         "facility": facility,
         "county_name": shareholder.city,
-        "meeting_number": "...",  # TODO: What is this?
-        "meeting_date": "...",  # TODO: What is this?
+        "meeting_number": "...",
+        "meeting_date": "...",
         "borrower_name": shareholder.name,
         "amount_requested": facility.amount if facility.amount else "...",
         "amount_received": (

@@ -53,9 +53,10 @@ class FacilityType(models.Model):
     name = models.CharField(max_length=255, unique=True)
     fa_name = models.CharField("نام", max_length=255)
     percentage = models.DecimalField(
-        "درصد سهام به تسهیلات", max_digits=3, decimal_places=2
+        "درصد سهام به تسهیلات", max_digits=5, decimal_places=2
     )
     rate = models.DecimalField("درصد سود", max_digits=3, decimal_places=2)
+    delay_penalty_rate = models.DecimalField("نرخ جریمه تاخیر", max_digits=5, decimal_places=2, default=0.0)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
 
@@ -118,11 +119,7 @@ class Facility(models.Model):
     def delay_repayment_penalty(self):
         if not self.is_overdue or self.amount_received is None or self.end_date is None:
             return 0
-        penalty_rate = Decimal(
-            FacilitySetting.objects.get(
-                name="rate_of_facility_delay_repayment_penalty_daily"
-            ).value
-        )
+        penalty_rate = self.facility_type.delay_penalty_rate
         debt = self.total_debt
         current_year_start = FacilitySetting.current_fiscal_year_start_date()
         delay_start = max(self.end_date, current_year_start)
