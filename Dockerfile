@@ -19,4 +19,4 @@ RUN chmod +x manage.py
 
 EXPOSE 8000
 
-CMD ["uv", "run", "gunicorn", "baghdaran.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "loan.wsgi:application", "--bind", "0.0.0.0:8000"]
