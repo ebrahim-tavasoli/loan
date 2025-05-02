@@ -20,7 +20,7 @@
         }
         @page {
             margin: 0;
-            size: A4;
+            size: A4 landscape;
         }
         body {
             font-family: "Nazanin", sans-serif;
@@ -47,16 +47,16 @@
             border-bottom: 1px dotted black;
             min-width: 100px;
         }
+        p {
+            line-height: 20px;
+        }
     </style>
 </head>
 <body>
     <h2 style="text-align: center;">بسمه تعالی</h2>
-    <h2 style="text-align: center;">فرم ۴</h2>
-
-    <p>مدیرعامل محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">استهبان</span></p>
-
-    <p>با سلام؛</p>
-    <p>پیرو جلسه شماره <span class="placeholder">{{ meeting_number|to_persian_numbers }}</span> مورخ <span class="placeholder">{{ meeting_date|to_persian_date }}</span> هیأت مدیره محترم صندوق شهرستان و بررسی تقاضاهای سهامداران برای دریافت تسهیلات مالی کوتاه مدت، بدین‌وسیله موارد مشروحه در جدول زیر برای اجرا ابلاغ می‌گردد.</p>
+    <p>مدیرعامل محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان</p>
+    <p>با سلام</p>
+    <p>پیرو جلسه شماره <span class="placeholder"></span> مورخ <span class="placeholder"></span> هیأت مدیره محترم صندوق شهرستان و بررسی تقاضاهای سهامداران برای دریافت تسهیلات مالی کوتاه مدت، بدین‌وسیله موارد مشروحه در جدول زیر برای اجرا ابلاغ می‌گردد.</p>
 
     <table class="table-container">
         <tr>
@@ -76,9 +76,12 @@
             <td>{{ amount_received|to_persian_numbers }}</td>
             <td>{{ duration_months|to_persian_numbers }}</td>
             <td>{{ interest_rate|to_persian_numbers }}</td>
-            <td>...</td>
+            <td></td>
             <td>{{ investment_type }}</td>
-            <td>...</td>
+            <td>
+                {% if checks_count %}<p>{{ checks_count|to_persian_numbers }} فقره چک</p>{% endif %}
+                {% if promissory_note_count %}<p>{{ promissory_note_count|to_persian_numbers }} فقره سفته</p>{% endif %}
+            </td>
             <td>{{ description }}</td>
         </tr>
     </table>
@@ -92,7 +95,7 @@
     <p style="text-align: center;">مدیرعامل صندوق</p>
 
     <h3>رسید دریافت چک تسهیلات:</h3>
-    <p>اینجانب {{ borrower_name }} چک شماره <span class="placeholder">{{ receipt_number|to_persian_numbers }}</span> به تاریخ <span class="placeholder">{{ receipt_date|to_persian_date }}</span> به مبلغ <span class="placeholder">{{ receipt_amount|to_persian_numbers }}</span> ریال را از امور مالی صندوق حمایت از توسعه بخش کشاورزی شهرستان <span class="placeholder">استهبان</span> دریافت نمودم.</p>
+    <p>اینجانب {{ borrower_name }} چک شماره <span class="placeholder">{{ receipt_number|to_persian_numbers }}</span> به تاریخ <span class="placeholder">{{ receipt_date|to_persian_date }}</span> به مبلغ <span class="placeholder">{{ receipt_amount|to_persian_numbers }}</span> ریال را از امور مالی صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان دریافت نمودم.</p>
     <p style="text-align: left;">امضاء و اثر انگشت</p>
 </body>
 </html>

@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'facility/css/jalalidatepicker.min.css' %}"/>
+<script src="{% static 'facility/js/jalalidatepicker.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1>انتخاب سال مالی برای گزارش</h1>
+    <form method="post" action="">
+        {% csrf_token %}
+        <div class="form-row">
+            <label for="year">سال مالی:</label>
+            <select name="year" id="year">
+                {% for year_value, year_range in years %}
+                    <option value="{{ year_value }}" {% if year_value == current_year %}selected{% endif %}>{{ year_range }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="submit-row">
+            <input type="submit" value="تولید گزارش مالی" class="default">
+        </div>
+    </form>
+</div>
+
+<br><hr><br>
+
+<div class="module">
+    <h1>گزارش وام ها</h1>
+    <form method="get" action="{% url 'facility:report' %}">
+        {% for field in facility_form %}
+        <div class="form-row">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+            <div class="help">{{ field.help_text|safe }}</div>
+            {% endif %}
+            {% if field.errors %}
+            <div class="errors">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="submit-row">
+            <input type="submit" value="تولید گزارش وام ها" class="default">
+        </div>
+    </form>
+    <script>
+        jalaliDatepicker.startWatch({
+            separatorChars: {
+                date: '-'   // now it will render e.g. "1403-02-12"
+            }
+        });
+    </script>
+</div>
+{% endblock %}

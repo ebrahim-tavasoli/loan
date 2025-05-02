@@ -1,23 +1,25 @@
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 import jdatetime
-from .models import Facility, FacilitySetting
+from .models import Facility, FacilitySetting, FacilityRequest, FacilityType
 from loan.logics import return_pdf
 
+from num2fawords import words
 from django.http import HttpResponse
 from weasyprint import HTML
 import os
+from shareholder.models import Shareholder
+from django.db.models import Q
 
 
 def generate_contract_view(request, facility_id):
     """Render contract template with facility data and generate PDF"""
     facility = get_object_or_404(Facility, pk=facility_id)
-    shareholder = facility.shareholder
+    shareholder = facility.facility_request.shareholder
 
     # Fetch financial instruments (checks & promissory notes)
-    financial_instruments = facility.financial_instruments.all()
-    checks = financial_instruments.filter(instrument_type="check")
-    promissory_notes = financial_instruments.filter(instrument_type="promissory_note")
+    checks = facility.facility_check.all()
+    promissory_notes = facility.facility_promissory_note.all()
 
     # Fetch all guarantors related to this facility
     guarantors = facility.guarantors.all()
@@ -28,10 +30,10 @@ def generate_contract_view(request, facility_id):
         "contract_number": facility.id,
         "contract_date": facility.start_date if facility.start_date else "...",
         "amount_in_words": (
-            str(facility.amount_received) if facility.amount_received else "..."
+            str(facility.amount) if facility.amount else "..."
         ),
-        "loan_amount": facility.amount_received,
-        "loan_amount_words": ".............",
+        "loan_amount": facility.amount,
+        "loan_amount_words": words(facility.amount),
         "due_date": facility.end_date if facility.end_date else "...",
         "duration_months": (
             ((facility.end_date - facility.start_date).days // 30)
@@ -52,20 +54,10 @@ def generate_contract_view(request, facility_id):
         "borrower_phone": shareholder.phone if shareholder.phone else "...",
         # Check Details
         "check_count": checks.count(),
-        "check_number": checks[0].number if checks else "...",
-        "account_number": checks[0].account_number if checks else "...",
-        "bank_name": checks[0].bank_name if checks else "...",
-        "branch_name": checks[0].branch_name if checks else "...",
-        "bank_code": checks[0].bank_code if checks else "...",
-        "check_amount": checks[0].amount if checks else "...",
-        "check_owner": checks[0].owner_name if checks else "...",
-        # Promissory Notes
-        "promissory_note_number": (
-            promissory_notes[0].number if promissory_notes else "..."
-        ),
-        "promissory_note_amount": (
-            promissory_notes[0].amount if promissory_notes else "..."
-        ),
+        "checks": checks,
+        # Promissory Note
+        "promissories_count": len(promissory_notes),
+        "promissories": promissory_notes,
         # Guarantor List
         "guarantors": guarantors,
         # Additional Facility Details
@@ -84,7 +76,7 @@ def generate_contract_view(request, facility_id):
         "start_date": facility.start_date if facility.start_date else "...",
         "end_date": facility.end_date if facility.end_date else "...",
         "facility_days": facility.facility_days,
-        "facility_type": facility.facility_type if facility.facility_type else "...",
+        "facility_type": facility.facility_request.facility_type if facility.facility_request.facility_type else "...",
         "delay_repayment_penalty": (
             facility.delay_repayment_penalty
             if facility.delay_repayment_penalty
@@ -120,38 +112,35 @@ def generate_contract_view(request, facility_id):
     return response
 
 
-def generate_form4_view(request, facility_id):
+def generate_form4_view(request, facility_request_id):
     """Render Form 4 template for a specific Facility and generate PDF"""
-    facility = get_object_or_404(Facility, pk=facility_id)
-    shareholder = facility.shareholder
+    facility = get_object_or_404(Facility, pk=facility_request_id)
+    shareholder = facility.facility_request.shareholder
 
     guarantors = facility.guarantors.all()
-    financial_instruments = facility.financial_instruments.all()
-    first_instrument = financial_instruments.first()
+    checks = facility.facility_check.all()
+    promissory_note = facility.facility_promissory_note.all()
+    
 
     context = {
         "facility": facility,
         "county_name": shareholder.city,
-        "meeting_number": "...",
-        "meeting_date": "...",
         "borrower_name": shareholder.name,
-        "amount_requested": facility.amount if facility.amount else "...",
+        "amount_requested": facility.facility_request.amount if facility.facility_request.amount else "...",
         "amount_received": (
-            facility.amount_received if facility.amount_received else "..."
+            facility.amount if facility.amount else "..."
         ),
         "duration_months": (
-            ((facility.end_date - facility.start_date).days // 30)
+            (round((facility.end_date - facility.start_date).days / 30))
             if facility.start_date and facility.end_date
             else "..."
         ),
         "interest_rate": facility.interest_rate if facility.interest_rate else "...",
-        "investment_type": facility.facility_type.fa_name,
+        "investment_type": facility.facility_request.facility_type.name,
         "description": facility.description if facility.description else "...",
-        "financial_instruments": financial_instruments,
+        "checks_count": checks.count(),
+        "promissory_note_count": promissory_note.count(),
         "guarantors": guarantors,
-        "receipt_number": first_instrument.number if first_instrument else "-",
-        "receipt_date": "..........",
-        "receipt_amount": first_instrument.amount if first_instrument else "-",
     }
 
     # رندر HTML به صورت رشته
@@ -273,7 +262,7 @@ def generate_financial_report(request, year=None):
                 total_days = (facility.end_date - facility.start_date).days + 1
 
                 month_loans += (
-                    (facility.amount_received or 0)
+                    (facility.amount or 0)
                     * days_in_month_for_facility
                     // total_days
                 )
@@ -363,5 +352,99 @@ def generate_financial_report(request, year=None):
     response = HttpResponse(pdf_file, content_type="application/pdf")
     response["Content-Disposition"] = (
         f'attachment; filename="financial_report_{year}.pdf"'
+    )
+    return response
+
+
+def generate_facility_report_by_filter(request):
+    """Generate a PDF report of facilities with filtering options"""
+    from django.template.loader import render_to_string
+    from weasyprint import HTML
+    from django.http import HttpResponse
+    import os
+    import jdatetime
+
+    # Get filter parameters from request
+    facility_type = request.GET.get('facility_type')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    
+    # Base query for facilities
+    facilities = Facility.objects.all()
+    
+    # Apply filters if provided
+    if facility_type:
+        facilities = facilities.filter(
+            facility_request__facility_type__id=facility_type
+        )
+    
+    if from_date:
+        # Convert Jalali date string to jdatetime object
+        try:
+            from_date = jdatetime.datetime.strptime(from_date, '%Y-%m-%d').date()
+            facilities = facilities.filter(start_date__gte=from_date)
+        except ValueError:
+            pass
+    
+    if to_date:
+        # Convert Jalali date string to jdatetime object
+        try:
+            to_date = jdatetime.datetime.strptime(to_date, '%Y-%m-%d').date()
+            facilities = facilities.filter(start_date__lte=to_date)
+        except ValueError:
+            pass
+
+    
+    html_string = render_to_string("admin/facility/facility_report_filter.html", {"facilities": facilities})
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_root = os.path.join(base_dir, "staticfiles")
+
+    nazanin_400_path = os.path.join(
+        static_root, "facility", "font", "nazanin-400.woff2"
+    )
+    nazanin_700_path = os.path.join(
+        static_root, "facility", "font", "nazanin-700.woff2"
+    )
+
+    html_string = html_string.replace(
+        "/static/facility/font/nazanin-400.woff2", f"file://{nazanin_400_path}"
+    ).replace("/static/facility/font/nazanin-700.woff2", f"file://{nazanin_700_path}")
+
+    pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
+
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="facility_report_{facility_type}_{from_date}_{to_date}.pdf"'
+    )
+    return response
+
+def request_facility(request, id):
+    req = get_object_or_404(FacilityRequest, id=id)
+    
+    html_string = render_to_string("admin/facility/request_facility.html", {"facility_request": req})
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_root = os.path.join(base_dir, "staticfiles")
+
+    nazanin_400_path = os.path.join(
+        static_root, "facility", "font", "nazanin-400.woff2"
+    )
+    nazanin_700_path = os.path.join(
+        static_root, "facility", "font", "nazanin-700.woff2"
+    )
+
+    html_string = html_string.replace(
+        "/static/facility/img/tashilat1.jpg",
+        f"file://{static_root}/facility/img/tashilat1.jpg",
+    ).replace(
+        "/static/facility/font/nazanin-400.woff2", f"file://{nazanin_400_path}"
+    ).replace("/static/facility/font/nazanin-700.woff2", f"file://{nazanin_700_path}")
+
+    pdf_file = HTML(string=html_string, base_url=static_root).write_pdf()
+
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="request_facility_{req.shareholder.name}.pdf"'
     )
     return response

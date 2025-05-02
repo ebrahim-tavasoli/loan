@@ -9,6 +9,9 @@ def to_persian_numbers(value):
     fa_numbers = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
     return value.translate(fa_numbers)
 
+@register.filter
+def to_persian_thousand_sepraded_number(value):
+    return to_persian_numbers(f"{value:,}")
 
 from datetime import datetime, date
 

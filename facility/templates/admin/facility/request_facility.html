@@ -1,0 +1,82 @@
+{% load static %}
+{% load persian %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قرارداد تسهیلات {{ facility_type }}</title>
+    <style>
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-400.woff2' %}") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-700.woff2' %}") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+        }
+        @page {
+            margin-top: 5cm;
+            margin-left: 1.5cm;
+            margin-right: 1.5cm;
+            margin-bottom: 1.5cm;
+            size: A4;
+            @top-center {       
+                content: element(header);
+            }
+        }
+        header {
+            position: running(header);
+        }
+        header > img {
+            height: 4cm;
+        }
+        body {
+            font-family: Nazanin;
+            line-height: 1.8;
+        }
+</style>
+</head>
+<header>
+    <img src="{% static 'facility/img/tashilat1.jpg' %}" alt="Contract Image">
+</header>
+<body>
+    {% autoescape off %}
+    <h3>هیئت مدیره محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان</h3>
+    <p>با سلام</p>
+    <p>
+        احتراما اینجانب {{ facility_request.shareholder.name|bold }} فرزند {{ facility_request.shareholder.father_name|bold }} ش ش {{ facility_request.shareholder.id_number|to_persian_numbers|bold }} صادره از {{ facility_request.shareholder.issued_by|bold }} تاریخ تولد {{ facility_request.shareholder.birth_date|to_persian_date|bold }} کد ملی {{ facility_request.shareholder.melli_code|bold }} شغل {{ facility_request.shareholder.job|bold }} تقاضای مبلغ {{ facility_request.amount|to_persian_thousand_sepraded_number|bold }} ریال به حروف {{ facility_request.amount_in_letter|bold }} ریال تسهیلات
+     {{ facility_request.facility_type|bold }} با باز پرداخت {{ facility_request.repayment_duration|to_persian_numbers|bold }} ماهه جهت {{ facility_request.request_description|bold }} را دارم.
+    </p>
+    <p>
+        آدرس: {{ facility_request.shareholder.address|bold }} <b>-</b> {{ facility_request.shareholder.city|bold }}
+    </p>
+    <p>
+        تلفن: {{ facility_request.shareholder.phone|to_persian_numbers|bold }}
+    </p>
+    <p style="float: left">امضای متقاضی</p>
+    <br>
+    <br>
+    <h4>
+        مشخصات نزدیکترین افراد جهت تماس ضروری:
+    </h4>
+    <p>
+        نام و نام خانوادگی:
+    </p>
+        نام پدر:
+    </p>
+    <p>
+        شغل:
+    </p>
+    <p>
+        آدرس:
+    </p>
+    <p>
+        تلفن:
+    </p>
+    {% endautoescape %}
+</body>
+</html>

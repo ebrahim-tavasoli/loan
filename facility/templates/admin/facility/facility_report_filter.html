@@ -1,0 +1,71 @@
+{% load static %}
+{% load persian %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قرارداد تسهیلات {{ facility_type }}</title>
+    <style>
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-400.woff2' %}") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Nazanin";
+            src: url("{% static 'facility/font/nazanin-700.woff2' %}") format("woff2");
+            font-weight: 700;
+            font-style: normal;
+        }
+        @page {
+            margin: 1.5cm;
+            size: A4;
+        }
+        body {
+            font-family: Nazanin;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>ردیف</th>
+                <th>نام سهامدار</th>
+                <th>نوع تسهیلات</th>
+                <th>مبلغ تسهیلات</th>
+                <th>تاریخ درخواست</th>
+                <th>تاریخ پرداخت</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for facility in facilities %}
+            <tr>
+                <td>{{ forloop.counter|to_persian_numbers }}</td>
+                <td>{{ facility.facility_request.shareholder.name }}</td>
+                <td>{{ facility.facility_request.facility_type.name }}</td>
+                <td>{{ facility.amount|to_persian_thousand_sepraded_number }}</td>
+                <td>{{ facility.facility_request.created_at|date:"Y-m-d"|to_persian_date }}</td>
+                <td>{{ facility.start_date|to_persian_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

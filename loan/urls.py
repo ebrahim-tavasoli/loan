@@ -33,7 +33,7 @@ def health_check(request):
 
 
 urlpatterns = [
-    path("fa/", include("facility.urls")),
+    path("facility/", include("facility.urls")),
     path("shareholder/", include("shareholder.urls")),
     path("", admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),

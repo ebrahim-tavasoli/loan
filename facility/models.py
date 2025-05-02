@@ -1,11 +1,15 @@
-import jdatetime
+from email.policy import default
 
+import jdatetime
 from decimal import Decimal
+
 from django.db import models
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.utils import timezone
+
 from tinymce.models import HTMLField
 from django_jalali.db import models as jmodels
 
@@ -50,13 +54,7 @@ class FacilitySetting(models.Model):
 
 
 class FacilityType(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    fa_name = models.CharField("نام", max_length=255)
-    percentage = models.DecimalField(
-        "درصد سهام به تسهیلات", max_digits=5, decimal_places=2
-    )
-    rate = models.DecimalField("درصد سود", max_digits=3, decimal_places=2)
-    delay_penalty_rate = models.DecimalField("نرخ جریمه تاخیر", max_digits=5, decimal_places=2, default=0.0)
+    name = models.CharField("نام", max_length=25, unique=True)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
 
@@ -65,28 +63,58 @@ class FacilityType(models.Model):
         verbose_name_plural = "نوع تسهیلات"
 
     def __str__(self):
-        return self.fa_name
+        return self.name
 
 
-class Facility(models.Model):
+class FacilityRequest(models.Model):
     shareholder = models.ForeignKey(
         "shareholder.Shareholder", on_delete=models.CASCADE, verbose_name="سهامدار"
     )
     facility_type = models.ForeignKey(
         FacilityType, on_delete=models.CASCADE, verbose_name="نوع تسهیلات"
     )
-    total_shares = models.BigIntegerField("میزان سهام", null=True, blank=True)
-    amount = models.BigIntegerField("مبلغ", null=True, blank=True)
-    amount_received = models.BigIntegerField("مبلغ دریافتی")
+    amount = models.IntegerField("مبلغ", default=0)
+    repayment_duration = models.IntegerField("بازپرداخت به ماه", default=1)
+    request_description = models.TextField("توحیجات طرح", blank=True, null=True)
+    response_description = models.TextField("توضیحات هیات مدیره", blank=True, null=True)
+    is_approved = models.BooleanField("تایید شده", default=False)
+    response_file = models.FileField("فایل نتیجه", upload_to="فایل نتیجه", blank=True, null=True)
+    response_date = jmodels.jDateTimeField("تاریخ پاسخ هیات مدیره", default=None, null=True, blank=True)
+    created_at = jmodels.jDateTimeField("تاریخ در خواست", auto_now_add=True)
+    updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)  
+
+    class Meta:
+        verbose_name = "درخواست تسهیلات"
+        verbose_name_plural = "درخواست تسهیلات"
+
+    def __str__(self):
+        return f"{self.shareholder.name} - {self.facility_type.name}"
+
+    def save(self, *args, **kwargs):
+        if self.response_file is not None:
+            self.response_date = timezone.now()
+        super(FacilityRequest, self).save(*args, **kwargs)
+    
+    def amount_in_letter(self):
+        from num2fawords import words
+        return words(self.amount)
+
+
+class Facility(models.Model):
+    facility_request = models.OneToOneField(
+        FacilityRequest, on_delete=models.CASCADE, verbose_name="درخواست تسهیلات"
+    )
+    amount = models.IntegerField("مبلغ دریافتی", default=0)
     interest_rate = models.DecimalField(
-        "درصد سود", max_digits=5, decimal_places=2, null=True, blank=True
+        "درصد سود", max_digits=5, decimal_places=2, null=True, blank=True, default=0.0
     )
     insurance_rate = models.DecimalField(
-        "درصد بیمه", max_digits=7, decimal_places=4, null=True, blank=True
+        "درصد بیمه", max_digits=7, decimal_places=4, null=True, blank=True, default=0.0
     )
     tax_rate = models.DecimalField(
-        "درصد مالیات", max_digits=7, decimal_places=4, null=True, blank=True
+        "درصد مالیات", max_digits=7, decimal_places=4, null=True, blank=True, default=0.0
     )
+    delay_penalty_rate = models.DecimalField("درصد نرخ جریمه تاخیر", max_digits=5, decimal_places=2, default=0.0)
     start_date = jmodels.jDateField("تاریخ پرداخت")
     end_date = jmodels.jDateField("تاریخ سر رسید")
     purchase_item = models.CharField("برای خرید", max_length=255, blank=True, null=True)
@@ -99,6 +127,7 @@ class Facility(models.Model):
     power_of_attorney_date = jmodels.jDateField(
         "تاریخ وکالت نامه", blank=True, null=True
     )
+    power_of_attorney_file = models.FileField("وکالت نامه", upload_to="power_of_attorney_file", blank=True, null=True)
     description = models.TextField("توضیحات", blank=True, null=True)
     is_settled = models.BooleanField("تسویه شده", default=False)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
@@ -109,7 +138,7 @@ class Facility(models.Model):
         verbose_name_plural = "تسهیلات"
 
     def __str__(self):
-        return f"{self.shareholder.name} - {self.amount}"
+        return f"{self.facility_request.shareholder.name} - {self.amount}"
 
     @property
     def is_overdue(self) -> bool:
@@ -117,9 +146,9 @@ class Facility(models.Model):
 
     @property
     def delay_repayment_penalty(self):
-        if not self.is_overdue or self.amount_received is None or self.end_date is None:
+        if not self.is_overdue or self.amount is None or self.end_date is None:
             return 0
-        penalty_rate = self.facility_type.delay_penalty_rate
+        penalty_rate = self.delay_penalty_rate
         debt = self.total_debt
         current_year_start = FacilitySetting.current_fiscal_year_start_date()
         delay_start = max(self.end_date, current_year_start)
@@ -135,14 +164,14 @@ class Facility(models.Model):
 
     @property
     def profit_yearly(self):
-        if self.amount_received is None or self.interest_rate is None:
+        if self.amount is None or self.interest_rate is None:
             return 0
-        return self.amount_received * self.interest_rate // 100
+        return self.amount * self.interest_rate // 100
 
     @property
     def profit(self):
         if (
-            self.amount_received is None
+            self.amount is None
             or self.interest_rate is None
             or self.facility_days == 0
         ):
@@ -152,15 +181,15 @@ class Facility(models.Model):
 
     @property
     def insurance_amount(self):
-        if self.amount_received is None or self.insurance_rate is None:
+        if self.amount is None or self.insurance_rate is None:
             return 0
-        return self.amount_received * self.insurance_rate // 100
+        return self.amount * self.insurance_rate // 100
 
     @property
     def tax_amount(self):  # ارزش افزوده
-        if self.amount_received is None or self.tax_rate is None:
+        if self.amount is None or self.tax_rate is None:
             return 0
-        return self.amount_received * self.tax_rate // 100
+        return self.amount * self.tax_rate // 100
 
     @property
     def definite_days(self):
@@ -225,7 +254,7 @@ class Facility(models.Model):
     @property
     def total_deductions(self):  # جمع کسورات
         if (
-            self.amount_received is None
+            self.amount is None
             or self.insurance_rate is None
             or self.tax_amount is None
             or self.interest_rate is None
@@ -235,22 +264,22 @@ class Facility(models.Model):
 
     @property
     def total_payment(self):
-        if self.amount_received is None or self.total_deductions is None:
+        if self.amount is None or self.total_deductions is None:
             return 0
-        return self.amount_received - self.total_deductions
+        return self.amount - self.total_deductions
 
     @property
     def total_debt(self):
-        if self.amount_received is None:
+        if self.amount is None:
             return 0
         total_repaid = self.facility_repayments.aggregate(
             total_paid=Coalesce(Sum("amount"), 0)
         )["total_paid"]
-        return max(self.amount_received - total_repaid, 0)
+        return max(self.amount - total_repaid, 0)
 
     @property
     def delay_repayment_penalty(self):
-        if self.amount_received is None or self.end_date is None or not self.is_overdue:
+        if self.amount is None or self.end_date is None or not self.is_overdue:
             return 0
         penalty_rate = Decimal(
             FacilitySetting.objects.get(
@@ -287,46 +316,16 @@ class FacilityRepayment(models.Model):
         related_name="facility_repayments",
         verbose_name="تسهیلات",
     )
-    amount = models.BigIntegerField("مبلغ دریافتی")
+    amount = models.IntegerField("مبلغ دریافتی", default=0)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
 
     class Meta:
-        verbose_name = "بازپرداخت تسهیلات"
-        verbose_name_plural = "بازپرداخت تسهیلات"
+        verbose_name = "سر رسید تسهیلات"
+        verbose_name_plural = "سر رسید تسهیلات"
 
     def __str__(self):
-        return f"{self.facility.shareholder.name} - {self.amount}"
-
-
-@receiver(post_save, sender=Facility)
-def fill_facility_fields(sender, instance, created, **kwargs):
-    if created:
-        insurance_rate = (
-            FacilitySetting.objects.get(name="insurance_rate").value
-            if FacilitySetting.objects.get(name="insurance_enabled").value
-            else 0
-        )
-        tax_rate = (
-            FacilitySetting.objects.get(name="tax_rate").value
-            if FacilitySetting.objects.get(name="tax_enabled").value
-            else 0
-        )
-        instance.total_shares = instance.shareholder.total_shares
-        instance.amount = (
-            instance.facility_type.percentage * instance.shareholder.total_shares // 100
-        )
-        instance.interest_rate = instance.facility_type.rate
-        instance.insurance_rate = insurance_rate
-        instance.tax_rate = tax_rate
-        instance.save()
-
-
-@receiver(post_save, sender=FacilityRepayment)
-def set_facility_settled(sender, instance, created, **kwargs):
-    if not instance.facility.total_debt > 0:
-        instance.facility.is_settled = True
-        instance.facility.save()
+        return f"{self.facility.facility_request.shareholder.name} - {self.amount}"
 
 
 class Guarantor(models.Model):
@@ -350,36 +349,3 @@ class Guarantor(models.Model):
     class Meta:
         verbose_name = "ضامن"
         verbose_name_plural = "ضامنین"
-
-
-class FinancialInstrument(models.Model):
-    INSTRUMENT_TYPES = [
-        ("check", "چک"),
-        ("promissory_note", "سفته"),
-    ]
-
-    facility = models.ForeignKey(
-        "Facility",
-        on_delete=models.CASCADE,
-        related_name="financial_instruments",
-        verbose_name="تسهیلات",
-    )
-    instrument_type = models.CharField("نوع", max_length=20, choices=INSTRUMENT_TYPES)
-    number = models.CharField("شماره", max_length=50, unique=True)
-    amount = models.BigIntegerField("مبلغ")
-
-    # Only for Checks
-    account_number = models.CharField(
-        "شماره حساب", max_length=50, blank=True, null=True
-    )
-    bank_name = models.CharField("نام بانک", max_length=255, blank=True, null=True)
-    branch_name = models.CharField("نام شعبه", max_length=255, blank=True, null=True)
-    bank_code = models.CharField("کد بانک", max_length=10, blank=True, null=True)
-    owner_name = models.CharField("نام صاحب چک", max_length=255, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.get_instrument_type_display()} شماره {self.number} - {self.amount} ریال"
-
-    class Meta:
-        verbose_name = "اسناد مالی"
-        verbose_name_plural = "اسناد مالی"

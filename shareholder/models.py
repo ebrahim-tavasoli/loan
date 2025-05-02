@@ -12,10 +12,13 @@ class Shareholder(models.Model):
     accounting_code = models.CharField("کد حسابداری", max_length=32, unique=True)
     melli_code = models.CharField("کد ملی", max_length=10, unique=True)
     name = models.CharField("نام", max_length=255)
-    father_name = models.CharField("نام پدر", max_length=255, blank=True, null=True)
-    id_number = models.CharField("شماره شناسنامه", max_length=20, blank=True, null=True)
+    father_name = models.CharField("نام پدر", max_length=255)
+    birth_date = jmodels.jDateField("تاریخ تولد")
+    id_number = models.CharField("شماره شناسنامه", max_length=20)
+    issued_by = models.CharField("صادره از", max_length=32)
+    job = models.CharField("شفل", max_length=32)
     phone = models.CharField("شماره تلفن", max_length=11)
-    city = models.CharField("شهر", max_length=255, blank=True, null=True)
+    city = models.CharField("شهر", max_length=255)
     address = models.TextField("آدرس")
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
@@ -34,37 +37,17 @@ class Shareholder(models.Model):
         ]
 
     @property
-    def good_facility_amount(self):  # gharzolhasane
-        return (
-            facility_models.FacilityType.objects.get(name="good").percentage
-            * self.total_shares
-            // 100
-        )
-
-    @property
-    def force_facility_amount(self):  # mozarebe
-        return (
-            facility_models.FacilityType.objects.get(name="force").percentage
-            * self.total_shares
-            // 100
-        )
-
-    @property
-    def necessary_facility_amount(self):  # zaruri
-        return (
-            facility_models.FacilityType.objects.get(name="necessary").percentage
-            * self.total_shares
-            // 100
-        )
-
-    @property
-    def total_delay_penalty(self):
-        facilities = facility_models.Facility.objects.filter(shareholder=self)
-        return sum(facility.delay_repayment_penalty for facility in facilities)
+    def total_shares_number(self):
+        return self.share_set.aggregate(total_shares=Coalesce(Sum("share_number"), 0))[
+            "total_shares"
+        ]
 
     @property
     def total_debt(self):
-        return sum(facility.total_debt for facility in self.facility_set.all())
+        debt = 0
+        for i in self.facilityrequest_set.filter(is_approved=True):
+            debt += i.facility.total_debt
+        return debt
 
     @property
     def has_debt(self):
@@ -100,7 +83,7 @@ class Shareholder(models.Model):
         )
         total = (
             facility_models.FacilityRepayment.objects.filter(
-                facility__shareholder=self,
+                facility__facility_request__shareholder=self,
                 created_at__gte=current_year_start,
                 created_at__lt=next_year_start,
             ).aggregate(total=Sum("amount"))["total"]
@@ -108,11 +91,8 @@ class Shareholder(models.Model):
         )
         return total
 
-    total_shares.fget.short_description = "میزان سهام"
-    good_facility_amount.fget.short_description = "میزان قرض الحسنه قابل دریافت"
-    force_facility_amount.fget.short_description = "میزان مضاربه قابل دریافت"
-    necessary_facility_amount.fget.short_description = "میزان ضروری قابل دریافت"
-    total_delay_penalty.fget.short_description = "مجموع جریمه تأخیر"
+    total_shares.fget.short_description = "مبلغ سهام"
+    total_shares_number.fget.short_description = "تعداد سهام"
     total_facilities_in_year.fget.short_description = "مجموع تسهیلات در سال مالی جاری"
     total_repayments_in_year.fget.short_description = (
         "مجموع بازپرداخت‌ها در سال مالی جاری"
@@ -124,7 +104,7 @@ class Share(models.Model):
         Shareholder, on_delete=models.CASCADE, verbose_name="سهامدار"
     )
     share_number = models.IntegerField("تعداد سهام", default=0,)
-    amount = models.IntegerField("مقدار سهام")
+    amount = models.IntegerField("مبلغ سهام")
     description = models.TextField("زمینه فعالیت", null=True, blank=True,)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
