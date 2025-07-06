@@ -109,8 +109,13 @@
         </div>
 
         <div class="party">
-            <h3>آقای/ خانم {{ borrower_name }} فرزند {{ borrower_father_name }} به شماره شناسنامه {{ borrower_id_number|to_persian_numbers }} کدملی {{ borrower_national_id|to_persian_numbers }}</h3>
-            <p>ساکن شهرستان {{ borrower_city }} تلفن {{ borrower_phone|to_persian_numbers }} که در این قرارداد «قرض گیرنده» نامیده می شود از طرف دیگر به شرح ذیل منعقد می گردد.</p>
+            {% if shareholder.is_natural %}
+                <h3>آقای/ خانم {{ borrower_name }} فرزند {{ borrower_father_name }} به شماره شناسنامه {{ borrower_id_number|to_persian_numbers }} کدملی {{ borrower_national_id|to_persian_numbers }}</h3>
+                <p>ساکن شهرستان {{ borrower_city }} تلفن {{ borrower_phone|to_persian_numbers }} که در این قرارداد «قرض گیرنده» نامیده می شود از طرف دیگر به شرح ذیل منعقد می گردد.</p>
+            {% else %}
+                <h3>شرکت {{ borrower_name }} با شماره ثبت {{ shareholder.company_registration_number|to_persian_numbers }} کد اقتصادی {{ shareholder.economic_code|to_persian_numbers }}</h3>
+                <p>به نمایندگی {{ shareholder.legal_representative_name }} با کد ملی {{ shareholder.legal_representative_melli_code|to_persian_numbers }} ساکن شهرستان {{ borrower_city }} تلفن {{ borrower_phone|to_persian_numbers }} که در این قرارداد «قرض گیرنده» نامیده می شود از طرف دیگر به شرح ذیل منعقد می گردد.</p>
+            {% endif %}
         </div>
     </div>
 
@@ -118,7 +123,8 @@
         <ol>
             <li class="article">
                 <h4>ماده ۱:</h4>
-                <p>صندوق به موجب این قرارداد مبلغ {{ loan_amount|to_persian_numbers }} ریال ({{ loan_amount_words }} ریال) {{ facility_type }} به قرض گیرنده پرداخت نموده و قرض گیرنده ضمن اقرار به دریافت {{ facility_type }} متعهد گردید قرض دریافتی موضوع قرارداد را در جهت مندرج در گزارش طرح توجیهی قرار داده و به منظور خرید {{ purchase_item }} برای تأمین بخشی از {{ for_target }} مورد نیاز خود به مقدار و کیفیت مذکور در طرح توجیهی اقدام نماید.</p>
+                <p>صندوق به موجب این قرارداد مبلغ {{ loan_amount|to_persian_numbers }} ریال ({{ loan_amount_words }} ریال) {{ facility_type }} به قرض گیرنده پرداخت نموده و قرض گیرنده ضمن اقرار به دریافت {{ facility_type }} متعهد گردید قرض دریافتی موضوع قرارداد را در جهت مندرج در گزارش طرح توجیهی قرار داده و به منظور خرید {{ purchase_item }} برای تأمین بخشی از {{ for_target }} مورد نیاز 
+                {% if shareholder.is_natural %}خود{% else %}شرکت{% endif %} به مقدار و کیفیت مذکور در طرح توجیهی اقدام نماید.</p>
             </li>
 
             <li class="article">
@@ -143,7 +149,8 @@
 
             <li class="article">
                 <h4>ماده ۶:</h4>
-                <p>قرض گیرنده متعهد می‌شود وام دریافتی را صرفاً جهت خرید {{ purchase_item }} مورد نیاز خود و دیگر بهره‌برداران کشاورزی به شرح مذکور در طرح توجیهی و موضوع ماده ۱ این قرارداد مصرف نماید.</p>
+                <p>قرض گیرنده متعهد می‌شود وام دریافتی را صرفاً جهت خرید {{ purchase_item }} مورد نیاز 
+                {% if shareholder.is_natural %}خود و دیگر بهره‌برداران کشاورزی{% else %}شرکت و سایر بهره‌برداران{% endif %} به شرح مذکور در طرح توجیهی و موضوع ماده ۱ این قرارداد مصرف نماید.</p>
             </li>
 
             <li class="article">
@@ -228,7 +235,12 @@
                 <h4>ماده ۱۴:</h4>
                 <p>اقامتگاه قانونی طرفین قرارداد:</p>
                 <p>قرض دهنده: استهبان- بلوار قائم - ساختمان جهاد کشاورزی - طبقه همکف</p>
-                <p>قرض گیرنده: {{ shareholder.address }}</p>
+                {% if shareholder.is_natural %}
+                    <p>قرض گیرنده: {{ shareholder.address }}</p>
+                {% else %}
+                    <p>قرض گیرنده (شرکت): {{ shareholder.address }}</p>
+                    <p>نماینده قانونی: {{ shareholder.legal_representative_name }}</p>
+                {% endif %}
                 <p>طرفین مکلف هستند در صورت تغییر آدرس، مراتب را به دیگری کتباً اعلام نمایند، در غیر این صورت کلیه ابلاغ‌ها و اخطارها و مکاتبات به آدرس فوق‌الذکر معتبر می‌باشد. این قرارداد در {{ "14"|to_persian_numbers }} ماده و {{ "1"|to_persian_numbers }} تبصره و در {{ "2"|to_persian_numbers }} نسخه مبادله و امضاء شده و کلیه نسخ دارای اعتبار واحد بوده و برای طرفین لازم‌الاجراء می‌باشد.</p>
             </li>
         </ol>
@@ -240,7 +252,11 @@
                 <p>مهر و امضاء قرض دهنده</p>
             </div>
             <div class="signature">
-                <p>امضاء و اثر انگشت قرض گیرنده</p>
+                {% if shareholder.is_natural %}
+                    <p>امضاء و اثر انگشت قرض گیرنده</p>
+                {% else %}
+                    <p>مهر و امضاء نماینده قانونی قرض گیرنده</p>
+                {% endif %}
             </div>
         </div>
 

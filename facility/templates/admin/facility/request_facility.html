@@ -80,7 +80,13 @@
     <h3>هیئت مدیره محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان</h3>
     <p>با سلام</p>
     <p>
-        احتراما اینجانب {{ facility_request.shareholder.name|bold }} فرزند {{ facility_request.shareholder.father_name|bold }} ش ش {{ facility_request.shareholder.id_number|to_persian_numbers|bold }} صادره از {{ facility_request.shareholder.issued_by|bold }} تاریخ تولد {{ facility_request.shareholder.birth_date|to_persian_date|bold }} کد ملی {{ facility_request.shareholder.melli_code|to_persian_numbers|bold }} شغل {{ facility_request.shareholder.job|bold }} تقاضای مبلغ {{ facility_request.amount|to_persian_thousand_sepraded_number|bold }} ریال به حروف {{ facility_request.amount_in_letter|bold }} ریال تسهیلات
+        احتراما 
+        {% if facility_request.shareholder.is_natural %}
+            اینجانب {{ facility_request.shareholder.name|bold }} فرزند {{ facility_request.shareholder.father_name|bold }} ش ش {{ facility_request.shareholder.id_number|to_persian_numbers|bold }} صادره از {{ facility_request.shareholder.issued_by|bold }} تاریخ تولد {{ facility_request.shareholder.birth_date|to_persian_date|bold }} کد ملی {{ facility_request.shareholder.melli_code|to_persian_numbers|bold }} شغل {{ facility_request.shareholder.job|bold }}
+        {% else %}
+            شرکت {{ facility_request.shareholder.name|bold }} با شماره ثبت {{ facility_request.shareholder.company_registration_number|to_persian_numbers|bold }} کد اقتصادی {{ facility_request.shareholder.economic_code|to_persian_numbers|bold }} به نمایندگی {{ facility_request.shareholder.legal_representative_name|bold }} با کد ملی {{ facility_request.shareholder.legal_representative_melli_code|to_persian_numbers|bold }}
+        {% endif %}
+        تقاضای مبلغ {{ facility_request.amount|to_persian_thousand_sepraded_number|bold }} ریال به حروف {{ facility_request.amount_in_letter|bold }} ریال تسهیلات
      {{ facility_request.facility_type|bold }} با باز پرداخت {{ facility_request.repayment_duration|to_persian_numbers|bold }} ماهه جهت {{ facility_request.request_description|bold }} را دارم.
     </p>
     <p>
@@ -89,11 +95,25 @@
     <p>
         تلفن: {{ facility_request.shareholder.phone|to_persian_numbers|bold }}
     </p>
+    {% if facility_request.shareholder.is_legal %}
+    <p>
+        نوع شرکت: {{ facility_request.shareholder.company_type|bold|default:"نامشخص" }}
+    </p>
+    <p>
+        تاریخ ثبت شرکت: {{ facility_request.shareholder.registration_date|to_persian_date|bold|default:"نامشخص" }}
+    </p>
+    {% endif %}
     <hr>
     <h4 style="margin: 0; padding= 0;">توجیحات طرح:</h4>
     <p style="margin: 0; padding= 0;">{{ facility_request.request_description }}</p>
     <hr>
-    <p style="float: left">امضای متقاضی</p>
+    <p style="float: left">
+        {% if facility_request.shareholder.is_natural %}
+            امضای متقاضی
+        {% else %}
+            مهر و امضای نماینده قانونی شرکت
+        {% endif %}
+    </p>
     <br>
     <br>
     <h4>
