@@ -1,6 +1,7 @@
 from django.db import models
 
 from django_jalali.db import models as jmodels
+from django_comma_integer_field import CommaIntegerField
 
 
 class Check(models.Model):
@@ -11,7 +12,7 @@ class Check(models.Model):
         verbose_name="تسهیلات",
     )
     number = models.CharField("شماره", max_length=50, unique=True)
-    amount = models.IntegerField("مبلغ", default=0)
+    amount = CommaIntegerField("مبلغ", default=0)
     account_number = models.CharField(
         "شماره حساب", max_length=50, blank=True, null=True
     )
@@ -37,7 +38,7 @@ class PromissoryNote(models.Model):
         verbose_name="تسهیلات",
     )
     number = models.CharField("شماره", max_length=50, unique=True)
-    amount = models.IntegerField("مبلغ", default=0)
+    amount = CommaIntegerField("مبلغ", default=0)
     owner_name = models.CharField("نام صاحب سفته", max_length=255, blank=True, null=True)
     file = models.FileField("سفته", upload_to="promissory_notes")
     created_at = jmodels.jDateTimeField("زمان ایجاد", auto_now_add=True)

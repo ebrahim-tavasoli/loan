@@ -78,7 +78,6 @@ class GuarantorInline(admin.StackedInline):
 
 class FacilityRepaymentInline(admin.TabularInline):
     model = models.FacilityRepayment
-    form = forms.FacilityRepaymentForm
     extra = 1
 
 
@@ -90,7 +89,6 @@ class FacilityRequestAdmin(admin.ModelAdmin):
         "formatted_amount",
         "request_facility_form"
     )
-    form = forms.FacilityRequestForm
     autocomplete_fields = ("shareholder", "facility_type")
     search_fields = (
         "shareholder",
@@ -105,7 +103,6 @@ class FacilityRequestAdmin(admin.ModelAdmin):
         js = [
             "admin/js/jquery.init.js",
             "admin/js/autocomplete.js",
-            "facility/js/format_numbers.js"
         ]
         
     def request_facility_form(self, obj):
@@ -117,9 +114,9 @@ class FacilityRequestAdmin(admin.ModelAdmin):
         return f"{obj.amount:,}"
     formatted_amount.short_description = 'مبلغ'
 
+
 @admin.register(models.Facility)
 class FacilityAdmin(admin.ModelAdmin):
-    form = forms.FacilityForm
     list_display = (
         "get_shareholder",
         "formatted_amount",
@@ -157,16 +154,19 @@ class FacilityAdmin(admin.ModelAdmin):
     autocomplete_fields = ("facility_request",)
 
     inlines = [
-        FacilityRepaymentInline,
         GuarantorInline,
         guarantees_admin.CheckInline,
-        guarantees_admin.PromissoryNoteInline
+        guarantees_admin.PromissoryNoteInline,
+        FacilityRepaymentInline,
     ]
 
     actions = ["generate_contract"]
 
     class Media:
-        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js", "facility/js/format_numbers.js"]
+        js = [
+                "admin/js/jquery.init.js",
+                "admin/js/autocomplete.js", 
+            ]
 
     def generate_contract(self, request, queryset):
         """Admin action to generate contract for a selected Facility"""
@@ -257,7 +257,6 @@ class FacilityAdmin(admin.ModelAdmin):
 
 @admin.register(models.FacilityRepayment)
 class FacilityRepaymentAdmin(admin.ModelAdmin):
-    form = forms.FacilityRepaymentForm
     list_display = ("facility", "amount", "created_at")
     search_fields = (
         "facility__facility_request__shareholder__name",
@@ -270,7 +269,7 @@ class FacilityRepaymentAdmin(admin.ModelAdmin):
     autocomplete_fields = ("facility",)
 
     class Media:
-        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js", "facility/js/format_numbers.js"]
+        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js"]
 
 
 @admin.register(models.Guarantor)

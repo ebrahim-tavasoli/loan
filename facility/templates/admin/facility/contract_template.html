@@ -31,6 +31,28 @@
         header {
             position: running(header);
         }
+                .header-date {
+            position: absolute;
+            top: 26px;
+            left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 3px;
+            z-index: 10;
+        }
+        .header-number {
+            position: absolute;
+            top: 58px;
+            left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 3px;
+            z-index: 10;
+        }
         header > img {
             height: 4cm;
         }
@@ -68,6 +90,12 @@
 </head>
 <header>
     <img src="{% static 'facility/img/tashilat1.jpg' %}" alt="Contract Image">
+    <div class="header-date">
+        {{ created_date.date|to_persian_date }}
+    </div>
+    <div class="header-number">
+        {{ contract_number|to_persian_numbers }}
+    </div>
 </header>
 <body>
     <h1 style="text-align: center;">قرارداد تسهیلات {{ facility_type }}</h1>

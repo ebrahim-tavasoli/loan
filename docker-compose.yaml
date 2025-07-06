@@ -2,11 +2,11 @@ services:
   init:
     build: .
     image: ebrahimtavasoli/loan:latest
-    command: sh -c "./manage.py collectstatic --noinput && ./manage.py migrate"
+    command: sh -c "./manage.py collectstatic --clear --noinput && ./manage.py migrate"
     volumes:
       - ./media:/app/media
       - ./static:/app/static
-      - ./:/app
+      # - ./:/app
     depends_on:
       db:
         condition: service_healthy
@@ -19,7 +19,11 @@ services:
     volumes:
       - ./media:/app/media
       - ./static:/app/static
-      - ./:/app
+      - ./facility:/app/facility
+      - ./guarantees:/app/guarantees
+      - ./shareholder:/app/shareholder
+      - ./loan:/app/loan
+      - ./templates:/app/templates
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/health || exit 1"]
       interval: 30s

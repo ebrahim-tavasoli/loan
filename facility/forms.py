@@ -1,29 +1,8 @@
 from django import forms
-from loan.base_forms import CommaSeparatedBaseForm
 from facility import models
 from django_jalali.forms import jDateField
 from django_jalali.forms.widgets import jDateInput
 
-
-class FacilityRequestForm(CommaSeparatedBaseForm):
-
-    class Meta:
-        model = models.FacilityRequest
-        fields = '__all__'
-        
-
-class FacilityForm(CommaSeparatedBaseForm):
-
-    class Meta:
-        model = models.Facility
-        fields = '__all__'
-        
-
-class FacilityRepaymentForm(CommaSeparatedBaseForm):
-
-    class Meta:
-        model = models.FacilityRepayment
-        fields = '__all__'
 
 
 class FacilityReportForm(forms.Form):

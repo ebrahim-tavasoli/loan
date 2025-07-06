@@ -82,6 +82,7 @@ def generate_contract_view(request, facility_id):
             if facility.delay_repayment_penalty
             else "..."
         ),
+        "created_date": facility.created_at
     }
 
     html_string = render_to_string("admin/facility/contract_template.html", context)
@@ -445,6 +446,6 @@ def request_facility(request, id):
 
     response = HttpResponse(pdf_file, content_type="application/pdf")
     response["Content-Disposition"] = (
-        f'attachment; filename="request_facility_{req.shareholder.name}.pdf"'
+        f'filename="request_facility_{req.shareholder.name}.pdf"'
     )
     return response

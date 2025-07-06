@@ -3,7 +3,7 @@ from django.contrib import admin
 import django_jalali.admin as jadmin
 from django_jalali.admin.filters import JDateFieldListFilter
 
-from guarantees import models, forms
+from guarantees import models
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -25,12 +25,10 @@ class BaseAdmin(admin.ModelAdmin):
 
 @admin.register(models.Check)
 class CheckAdmin(BaseAdmin):
-    form = forms.CheckForm
-
+    pass
 
 class CheckInline(admin.StackedInline):
     model = models.Check
-    form = forms.CheckForm
     extra = 0
 
 
@@ -46,10 +44,8 @@ class PowerOfAttorneyInline(admin.StackedInline):
 
 @admin.register(models.PromissoryNote)
 class PromissoryNoteAdmin(BaseAdmin):
-    form = forms.PromissoryNoteForm
-
+    pass
 
 class PromissoryNoteInline(admin.StackedInline):
     model = models.PromissoryNote
-    form = forms.PromissoryNoteForm
     extra = 0

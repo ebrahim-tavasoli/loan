@@ -4,13 +4,29 @@ from django.contrib.admin import SimpleListFilter
 from django.urls import reverse
 from django.utils.html import format_html
 
-from shareholder import models, forms
+from shareholder import models
 from facility import models as facility_models
 
 
 class ShareInline(admin.TabularInline):
     model = models.Share
     extra = 1
+
+
+class ShareholderTypeFilter(SimpleListFilter):
+    title = _("نوع سهامدار")
+    parameter_name = "shareholder_type"
+
+    def lookups(self, request, model_admin):
+        return [
+            ("natural", _("حقیقی")),
+            ("legal", _("حقوقی")),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(shareholder_type=self.value())
+        return queryset
 
 
 class HasDebtFilter(SimpleListFilter):
@@ -44,6 +60,8 @@ class ShareholderAdmin(admin.ModelAdmin):
     list_display = (
         "accounting_code",
         "name",
+        "shareholder_type",
+        "display_identifier",
         "total_shares",
         "total_shares_number",
         "total_debt",
@@ -52,17 +70,53 @@ class ShareholderAdmin(admin.ModelAdmin):
         "has_debt",
         "view_contract_link",
     )
-    search_fields = ("accounting_code", "melli_code", "name", "phone", "address")
+    search_fields = (
+        "accounting_code", 
+        "melli_code", 
+        "company_registration_number", 
+        "economic_code",
+        "name", 
+        "phone", 
+        "address"
+    )
     readonly_fields = (
         "total_shares",
         "total_debt",
+        "is_natural",
+        "is_legal",
+        "created_at",
+        "updated_at",
     )
     list_filter = (
+        "shareholder_type",
         "created_at",
+        ShareholderTypeFilter,
         HasDebtFilter,
+    )
+    
+    fieldsets = (
+        ("اطلاعات عمومی", {
+            'fields': ('shareholder_type', 'accounting_code', 'name', 'phone', 'city', 'address')
+        }),
+        ("اطلاعات سهامدار حقیقی", {
+            'fields': ('melli_code', 'father_name', 'birth_date', 'id_number', 'issued_by', 'job'),
+            'classes': ('collapse',),
+        }),
+        ("اطلاعات سهامدار حقوقی", {
+            'fields': ('company_registration_number', 'economic_code', 'registration_date', 
+                      'legal_representative_name', 'legal_representative_melli_code', 'company_type'),
+            'classes': ('collapse',),
+        }),
+        ("اطلاعات سیستم", {
+            'fields': ('total_shares', 'total_debt', 'is_natural', 'is_legal'),
+            'classes': ('collapse',),
+        }),
     )
 
     inlines = [ShareInline,]
+
+    class Media:
+        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js"]
 
     def view_contract_link(self, obj):
         url = reverse("shareholder:shareholder_contract", args=[obj.id])
@@ -87,7 +141,6 @@ class ShareholderAdmin(admin.ModelAdmin):
 
 @admin.register(models.Share)
 class ShareAdmin(admin.ModelAdmin):
-    form = forms.ShareForm
     list_display = ("shareholder", "amount", "get_created_date", "get_updated_date")
     search_fields = ("shareholder__name", "amount")
     autocomplete_fields = ("shareholder",)
@@ -103,4 +156,4 @@ class ShareAdmin(admin.ModelAdmin):
     get_updated_date.short_description = "تاریخ ویرایش"
 
     class Media:
-        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js", "facility/js/format_numbers.js"]
+        js = ["admin/js/jquery.init.js", "admin/js/autocomplete.js"]

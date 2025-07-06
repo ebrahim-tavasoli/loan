@@ -34,21 +34,53 @@
         header > img {
             height: 4cm;
         }
+        .header-date {
+            position: absolute;
+            top: 26px;
+            left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 3px;
+            z-index: 10;
+        }
+        .header-number {
+            position: absolute;
+            top: 58px;
+            left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 3px;
+            z-index: 10;
+        }
         body {
             font-family: Nazanin;
             line-height: 1.8;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #888;
         }
 </style>
 </head>
 <header>
     <img src="{% static 'facility/img/tashilat1.jpg' %}" alt="Contract Image">
+    <div class="header-date">
+        {{ facility_request.created_at.date|to_persian_date }}
+    </div>
+    <div class="header-number">
+        {{ facility_request.id|to_persian_numbers }}
+    </div>
 </header>
 <body>
     {% autoescape off %}
     <h3>هیئت مدیره محترم صندوق حمایت از توسعه بخش کشاورزی شهرستان استهبان</h3>
     <p>با سلام</p>
     <p>
-        احتراما اینجانب {{ facility_request.shareholder.name|bold }} فرزند {{ facility_request.shareholder.father_name|bold }} ش ش {{ facility_request.shareholder.id_number|to_persian_numbers|bold }} صادره از {{ facility_request.shareholder.issued_by|bold }} تاریخ تولد {{ facility_request.shareholder.birth_date|to_persian_date|bold }} کد ملی {{ facility_request.shareholder.melli_code|bold }} شغل {{ facility_request.shareholder.job|bold }} تقاضای مبلغ {{ facility_request.amount|to_persian_thousand_sepraded_number|bold }} ریال به حروف {{ facility_request.amount_in_letter|bold }} ریال تسهیلات
+        احتراما اینجانب {{ facility_request.shareholder.name|bold }} فرزند {{ facility_request.shareholder.father_name|bold }} ش ش {{ facility_request.shareholder.id_number|to_persian_numbers|bold }} صادره از {{ facility_request.shareholder.issued_by|bold }} تاریخ تولد {{ facility_request.shareholder.birth_date|to_persian_date|bold }} کد ملی {{ facility_request.shareholder.melli_code|to_persian_numbers|bold }} شغل {{ facility_request.shareholder.job|bold }} تقاضای مبلغ {{ facility_request.amount|to_persian_thousand_sepraded_number|bold }} ریال به حروف {{ facility_request.amount_in_letter|bold }} ریال تسهیلات
      {{ facility_request.facility_type|bold }} با باز پرداخت {{ facility_request.repayment_duration|to_persian_numbers|bold }} ماهه جهت {{ facility_request.request_description|bold }} را دارم.
     </p>
     <p>
@@ -57,6 +89,10 @@
     <p>
         تلفن: {{ facility_request.shareholder.phone|to_persian_numbers|bold }}
     </p>
+    <hr>
+    <h4 style="margin: 0; padding= 0;">توجیحات طرح:</h4>
+    <p style="margin: 0; padding= 0;">{{ facility_request.request_description }}</p>
+    <hr>
     <p style="float: left">امضای متقاضی</p>
     <br>
     <br>

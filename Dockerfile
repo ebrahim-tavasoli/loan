@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y curl weasyprint && apt-get clean && rm 
 WORKDIR /app
 
 RUN pip install uv
-RUN apt-get update && apt-get install -y locales
+RUN apt-get update && apt-get install -y locales git
 RUN sed -i '/fa_IR.UTF-8/s/^# //' /etc/locale.gen && \
     locale-gen
 ENV LANG fa_IR.UTF-8

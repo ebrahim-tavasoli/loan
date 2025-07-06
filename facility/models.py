@@ -9,9 +9,11 @@ from django.db.models.functions import Coalesce
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.core import validators
 
 from tinymce.models import HTMLField
 from django_jalali.db import models as jmodels
+from django_comma_integer_field import CommaIntegerField
 
 
 class FacilitySetting(models.Model):
@@ -73,7 +75,7 @@ class FacilityRequest(models.Model):
     facility_type = models.ForeignKey(
         FacilityType, on_delete=models.CASCADE, verbose_name="نوع تسهیلات"
     )
-    amount = models.IntegerField("مبلغ", default=0)
+    amount = CommaIntegerField("مبلغ", default=0)
     repayment_duration = models.IntegerField("بازپرداخت به ماه", default=1)
     request_description = models.TextField("توحیجات طرح", blank=True, null=True)
     response_description = models.TextField("توضیحات هیات مدیره", blank=True, null=True)
@@ -104,7 +106,7 @@ class Facility(models.Model):
     facility_request = models.OneToOneField(
         FacilityRequest, on_delete=models.CASCADE, verbose_name="درخواست تسهیلات"
     )
-    amount = models.IntegerField("مبلغ دریافتی", default=0)
+    amount = CommaIntegerField("مبلغ دریافتی", default=0)
     interest_rate = models.DecimalField(
         "درصد سود", max_digits=5, decimal_places=2, null=True, blank=True, default=0.0
     )
@@ -316,7 +318,7 @@ class FacilityRepayment(models.Model):
         related_name="facility_repayments",
         verbose_name="تسهیلات",
     )
-    amount = models.IntegerField("مبلغ دریافتی", default=0)
+    amount = CommaIntegerField("مبلغ دریافتی", default=0)
     created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
 
